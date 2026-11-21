@@ -141,16 +141,30 @@
   <main id="mainContent" class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-grow">
     <!-- Mobile Top Buttons Slot (populated automatically when smartphone mode is active) -->
     <div id="mobileTopButtonsBar" class="hidden flex-wrap items-center gap-2 w-full" aria-label="Mobile quick actions">
-      <button
-        type="button"
-        id="mobileSpeakBtn"
-        class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-600 hover:from-rose-600 hover:via-fuchsia-700 hover:to-indigo-700 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-fuchsia-500/25 transition cursor-pointer"
-      >
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-        <span>Pronounce</span>
-      </button>
+      <div class="flex items-center gap-2 w-full">
+        <button
+          type="button"
+          id="mobileSpeakBtn"
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-600 hover:from-rose-600 hover:via-fuchsia-700 hover:to-indigo-700 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-fuchsia-500/25 transition cursor-pointer touch-manipulation"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <span>Pronounce</span>
+        </button>
+
+        <button
+          type="button"
+          id="mobilePauseResumeBtn"
+          disabled
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-amber-100 hover:bg-amber-200 disabled:opacity-40 disabled:pointer-events-none text-amber-950 font-semibold text-sm border border-amber-300 shadow-2xs transition cursor-pointer touch-manipulation"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+          <span id="mobilePauseResumeText">Pause</span>
+        </button>
+      </div>
     </div>
 
     <!-- Top Header -->
@@ -489,6 +503,8 @@
 
       const speakBtn = document.getElementById('speakBtn');
       const mobileSpeakBtn = document.getElementById('mobileSpeakBtn');
+      const mobilePauseResumeBtn = document.getElementById('mobilePauseResumeBtn');
+      const mobilePauseResumeText = document.getElementById('mobilePauseResumeText');
       const pauseResumeBtn = document.getElementById('pauseResumeBtn');
       const pauseResumeText = document.getElementById('pauseResumeText');
       const stopBtn = document.getElementById('stopBtn');
@@ -1271,16 +1287,20 @@
           statusDot.classList.add('bg-indigo-500', 'animate-pulse');
           statusText.textContent = 'Pronouncing...';
           pauseResumeBtn.disabled = false;
+          if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = false;
           stopBtn.disabled = false;
           pauseResumeText.textContent = 'Pause';
+          if (mobilePauseResumeText) mobilePauseResumeText.textContent = 'Pause';
           spokenPreviewWrapper.classList.remove('hidden');
         } else if (state === 'paused') {
           isPausedByUser = true;
           statusDot.classList.add('bg-amber-500');
           statusText.textContent = 'Paused';
           pauseResumeBtn.disabled = false;
+          if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = false;
           stopBtn.disabled = false;
           pauseResumeText.textContent = 'Resume';
+          if (mobilePauseResumeText) mobilePauseResumeText.textContent = 'Resume';
           spokenPreviewWrapper.classList.remove('hidden');
         } else {
           isPausedByUser = false;
@@ -1290,8 +1310,10 @@
           statusDot.classList.add('bg-emerald-500');
           statusText.textContent = 'Ready';
           pauseResumeBtn.disabled = true;
+          if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = true;
           stopBtn.disabled = true;
           pauseResumeText.textContent = 'Pause';
+          if (mobilePauseResumeText) mobilePauseResumeText.textContent = 'Pause';
           spokenPreviewWrapper.classList.add('hidden');
           spokenPreviewText.innerHTML = '';
         }
@@ -1573,6 +1595,12 @@
       if (mobileSpeakBtn) {
         mobileSpeakBtn.addEventListener('click', pronounceText);
       }
+      if (mobilePauseResumeBtn) {
+        mobilePauseResumeBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          togglePauseResume();
+        });
+      }
       pauseResumeBtn.addEventListener('click', togglePauseResume);
       stopBtn.addEventListener('click', stopSpeech);
       copyBtn.addEventListener('click', copyTypedText);
@@ -1628,6 +1656,10 @@
       if (mobileSpeakBtn) {
         colorWordsInElement(mobileSpeakBtn, 0);
         syncDarkButtonTextColor(mobileSpeakBtn);
+      }
+      if (mobilePauseResumeBtn) {
+        colorWordsInElement(mobilePauseResumeBtn, 0);
+        syncDarkButtonTextColor(mobilePauseResumeBtn);
       }
 
       // Voices load asynchronously in many browsers (especially Chrome/Edge)
