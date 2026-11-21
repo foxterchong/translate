@@ -96,17 +96,34 @@
 
     body.mobile-device-mode #mobileTopButtonsBar {
       display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
       order: -1;
       position: sticky;
       top: 0.5rem;
       z-index: 30;
-      background: rgba(255, 255, 255, 0.94);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       border: 2px solid #ffffff;
       border-radius: 1.5rem;
       padding: 0.625rem;
       margin-bottom: 0.875rem;
       box-shadow: 0 12px 24px -12px rgba(99, 102, 241, 0.35);
+    }
+
+    body.mobile-device-mode #mobileTopButtonsBar #primaryActionGroup,
+    body.mobile-device-mode #mobileTopButtonsBar #secondaryActionGroup {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    body.mobile-device-mode #mobileTopButtonsBar #primaryActionGroup button,
+    body.mobile-device-mode #mobileTopButtonsBar #secondaryActionGroup button {
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
     }
 
     body.mobile-device-mode #desktopActionButtonsBar {
@@ -165,6 +182,8 @@
           <span id="mobilePauseResumeText">Pause</span>
         </button>
       </div>
+
+      <div id="mobileMovedButtonsSlot" class="flex flex-wrap items-center gap-2 w-full"></div>
     </div>
 
     <!-- Top Header -->
@@ -292,7 +311,25 @@
       </div>
 
       <!-- Voice & Speech Controls Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 pt-1">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-5 pt-1">
+        <!-- Target Language Selector -->
+        <div class="md:col-span-1 bg-gradient-to-br from-fuchsia-50/90 to-pink-50/80 border border-fuchsia-200/80 rounded-2xl p-3.5">
+          <label for="translateLangSelect" class="block text-xs font-bold uppercase tracking-wider text-fuchsia-700 mb-2">Translate To</label>
+          <select
+            id="translateLangSelect"
+            class="w-full rounded-xl bg-white border border-fuchsia-200 focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-400/15 outline-none px-3.5 py-3 text-sm font-medium text-slate-800 transition"
+          >
+            <option value="zh-TW">繁體中文 (Traditional Chinese)</option>
+            <option value="zh-CN">简体中文 (Simplified Chinese)</option>
+            <option value="en">English</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="ko">한국어 (Korean)</option>
+            <option value="es">Español (Spanish)</option>
+            <option value="fr">Français (French)</option>
+            <option value="de">Deutsch (German)</option>
+          </select>
+        </div>
+
         <!-- Voice Selector -->
         <div class="md:col-span-1 bg-gradient-to-br from-sky-50/90 to-indigo-50/80 border border-sky-200/80 rounded-2xl p-3.5">
           <label for="voiceSelect" class="block text-xs font-bold uppercase tracking-wider text-sky-700 mb-2">Voice</label>
@@ -445,6 +482,17 @@
             </svg>
             <span>Stop</span>
           </button>
+
+          <button
+            type="button"
+            id="translateBtn"
+            class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold text-sm border border-fuchsia-700 shadow-2xs transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            <span id="translateBtnText">Translate</span>
+          </button>
         </div>
 
         <!-- Secondary Utility Actions -->
@@ -495,6 +543,7 @@
     (function () {
       // Cache DOM elements safely
       const textInput = document.getElementById('textInput');
+      const translateLangSelect = document.getElementById('translateLangSelect');
       const voiceSelect = document.getElementById('voiceSelect');
       const rateRange = document.getElementById('rateRange');
       const pitchRange = document.getElementById('pitchRange');
@@ -511,6 +560,8 @@
       const copyBtn = document.getElementById('copyBtn');
       const copyBtnText = document.getElementById('copyBtnText');
       const clearBtn = document.getElementById('clearBtn');
+      const translateBtn = document.getElementById('translateBtn');
+      const translateBtnText = document.getElementById('translateBtnText');
 
       const wordCountEl = document.getElementById('wordCount');
       const charCountEl = document.getElementById('charCount');
@@ -531,320 +582,48 @@
       const emotionButtons = document.querySelectorAll('.emotion-btn');
       const activeEmotionBadge = document.getElementById('activeEmotionBadge');
       const mobileTopButtonsBar = document.getElementById('mobileTopButtonsBar');
+      const mobileMovedButtonsSlot = document.getElementById('mobileMovedButtonsSlot');
       const desktopActionButtonsBar = document.getElementById('desktopActionButtonsBar');
       const primaryActionGroup = document.getElementById('primaryActionGroup');
       const secondaryActionGroup = document.getElementById('secondaryActionGroup');
 
-      /**
-       * Detect whether the user is currently on a smartphone device or narrow mobile viewport.
-       * @returns {boolean}
-       */
-      function isSmartphoneDevice() {
-        try {
-          const ua = navigator.userAgent || '';
-          const isMobileUa = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-          const isSmallViewport = window.innerWidth <= 767;
-          const hasTouch = 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
-          return Boolean(isMobileUa || (isSmallViewport && hasTouch) || window.innerWidth < 640);
-        } catch (err) {
-          return window.innerWidth < 640;
-        }
-      }
+      // Speech synthesis state & synchronization tracking
+      const synth = typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null;
+      let voices = [];
+      let activeUtterance = null;
+      let playbackState = 'idle'; // 'idle' | 'speaking' | 'paused'
+      let activeSessionId = 0;
+      let fallbackTimerId = null;
+      let spokenTokens = [];
+      let currentWordIndex = -1;
+      let activeEmotion = 'neutral';
+      let activeSpokenSourceText = '';
 
-      /**
-       * Swap between desktop and smartphone layouts and move all buttons to the top
-       * when smartphone mode is detected.
-       */
-      function applySmartphoneModeLayout() {
-        const mobileMode = isSmartphoneDevice();
-        document.body.classList.toggle('mobile-device-mode', mobileMode);
-
-        if (!mobileTopButtonsBar || !desktopActionButtonsBar || !primaryActionGroup || !secondaryActionGroup) {
-          return;
-        }
-
-        if (mobileMode) {
-          if (primaryActionGroup.parentElement !== mobileTopButtonsBar) {
-            mobileTopButtonsBar.appendChild(primaryActionGroup);
-          }
-          if (secondaryActionGroup.parentElement !== mobileTopButtonsBar) {
-            mobileTopButtonsBar.appendChild(secondaryActionGroup);
-          }
-          primaryActionGroup.classList.add('w-full');
-          secondaryActionGroup.classList.add('w-full');
-        } else {
-          if (primaryActionGroup.parentElement !== desktopActionButtonsBar) {
-            desktopActionButtonsBar.insertBefore(primaryActionGroup, secondaryActionGroup);
-          }
-          if (secondaryActionGroup.parentElement !== desktopActionButtonsBar) {
-            desktopActionButtonsBar.appendChild(secondaryActionGroup);
-          }
-          primaryActionGroup.classList.remove('w-full');
-          secondaryActionGroup.classList.remove('w-full');
-        }
-      }
-
-      // 10 Emotional Tone presets shaping rate, pitch, volume, and delivery character
-      const EMOTION_TONES = {
-        neutral: {
-          label: 'Neutral',
-          icon: '🙂',
-          desc: 'Balanced natural delivery',
-          rateMult: 1.0,
-          pitchAdd: 0.0,
-          volume: 1.0,
-          paceFactor: 1.0,
-        },
-        happy: {
-          label: 'Happy',
-          icon: '😄',
-          desc: 'Bright, upbeat & cheerful',
-          rateMult: 1.12,
-          pitchAdd: 0.24,
-          volume: 1.0,
-          paceFactor: 0.9,
-        },
-        excited: {
-          label: 'Excited',
-          icon: '🤩',
-          desc: 'Fast, energetic & lively',
-          rateMult: 1.28,
-          pitchAdd: 0.38,
-          volume: 1.0,
-          paceFactor: 0.78,
-        },
-        calm: {
-          label: 'Calm',
-          icon: '😌',
-          desc: 'Smooth, gentle & relaxed',
-          rateMult: 0.86,
-          pitchAdd: -0.06,
-          volume: 0.88,
-          paceFactor: 1.16,
-        },
-        sad: {
-          label: 'Sad',
-          icon: '😢',
-          desc: 'Slow, soft &melancholic',
-          rateMult: 0.74,
-          pitchAdd: -0.24,
-          volume: 0.78,
-          paceFactor: 1.32,
-        },
-        angry: {
-          label: 'Angry',
-          icon: '😠',
-          desc: 'Firm, intense & forceful',
-          rateMult: 1.18,
-          pitchAdd: -0.14,
-          volume: 1.0,
-          paceFactor: 0.86,
-        },
-        whisper: {
-          label: 'Whisper',
-          icon: '🤫',
-          desc: 'Quiet, hushed & delicate',
-          rateMult: 0.82,
-          pitchAdd: 0.14,
-          volume: 0.42,
-          paceFactor: 1.2,
-        },
-        dramatic: {
-          label: 'Dramatic',
-          icon: '🎭',
-          desc: 'Expressive, theatrical & bold',
-          rateMult: 0.92,
-          pitchAdd: 0.28,
-          volume: 1.0,
-          paceFactor: 1.1,
-        },
-        curious: {
-          label: 'Curious',
-          icon: '🧐',
-          desc: 'Inquisitive, bright & questioning',
-          rateMult: 1.05,
-          pitchAdd: 0.2,
-          volume: 0.95,
-          paceFactor: 0.96,
-        },
-        encouraging: {
-          label: 'Encouraging',
-          icon: '🙌',
-          desc: 'Warm, uplifting & supportive',
-          rateMult: 1.06,
-          pitchAdd: 0.16,
-          volume: 1.0,
-          paceFactor: 0.95,
-        },
-        serious: {
-          label: 'Serious',
-          icon: '🧐',
-          desc: 'Steady, measured & authoritative',
-          rateMult: 0.9,
-          pitchAdd: -0.16,
-          volume: 0.96,
-          paceFactor: 1.12,
-        },
-      };
-
-      let selectedEmotionKey = 'neutral';
-
-      /**
-       * Clamp synthesized speech parameters to safe Web Speech API ranges.
-       * @param {number} value
-       * @param {number} min
-       * @param {number} max
-       * @returns {number}
-       */
-      function clampSpeechParam(value, min, max) {
-        return Math.min(max, Math.max(min, Number(value.toFixed(2))));
-      }
-
-      /**
-       * Compute effective rate, pitch, and volume for the currently active emotion tone.
-       */
-      function getEffectiveSpeechSettings() {
-        const baseRate = parseFloat(rateRange.value);
-        const basePitch = parseFloat(pitchRange.value);
-        const safeRate = Number.isFinite(baseRate) ? baseRate : 1;
-        const safePitch = Number.isFinite(basePitch) ? basePitch : 1;
-        const tone = EMOTION_TONES[selectedEmotionKey] || EMOTION_TONES.neutral;
-
-        return {
-          tone,
-          rate: clampSpeechParam(safeRate * tone.rateMult, 0.5, 2.0),
-          pitch: clampSpeechParam(safePitch + tone.pitchAdd, 0.5, 2.0),
-          volume: clampSpeechParam(tone.volume, 0.1, 1.0),
-        };
-      }
-
-      /**
-       * Update visual selection state for the 10 emotion buttons and badge.
-       * @param {string} emotionKey
-       */
-      function setActiveEmotion(emotionKey) {
-        selectedEmotionKey = EMOTION_TONES[emotionKey] ? emotionKey : 'neutral';
-        const tone = EMOTION_TONES[selectedEmotionKey];
-
-        emotionButtons.forEach((btn) => {
-          const isMatch = btn.getAttribute('data-emotion') === selectedEmotionKey;
-          btn.classList.toggle('ring-2', isMatch);
-          btn.classList.toggle('ring-fuchsia-500', isMatch);
-          btn.classList.toggle('bg-gradient-to-r', isMatch);
-          btn.classList.toggle('from-rose-500', isMatch);
-          btn.classList.toggle('to-fuchsia-600', isMatch);
-          btn.classList.toggle('text-white', isMatch);
-          btn.classList.toggle('shadow-sm', isMatch);
-          btn.classList.toggle('bg-white', !isMatch);
-          btn.classList.toggle('text-slate-700', !isMatch);
-        });
-
-        if (activeEmotionBadge) {
-          activeEmotionBadge.textContent = `${tone.icon} ${tone.label} — ${tone.desc}`;
-          colorWordsInElement(activeEmotionBadge, 0);
-        }
-      }
-
-      // Bright rainbow palette applied word-by-word across the page
-      const RAINBOW_COLORS = [
+      const RAINBOW_CLASSES = [
         'text-rose-600',
         'text-amber-600',
-        'text-lime-600',
         'text-emerald-600',
         'text-sky-600',
         'text-indigo-600',
-        'text-purple-600',
+        'text-fuchsia-600',
       ];
 
-      /**
-       * Color each individual word inside an element with sequential rainbow colors
-       * while preserving spaces and line breaks.
-       * @param {HTMLElement|null} el
-       * @param {number} startIndex
-       * @returns {number} Next color index
-       */
-      function colorWordsInElement(el, startIndex = 0) {
-        if (!el) return startIndex;
+      const EMOTION_CONFIGS = {
+        neutral: { label: 'Neutral — Balanced natural delivery', rateMult: 1.0, pitchMult: 1.0, volume: 1.0 },
+        happy: { label: 'Happy — Bright, upbeat, and cheerful', rateMult: 1.08, pitchMult: 1.16, volume: 1.0 },
+        excited: { label: 'Excited — Fast, energetic, and lively', rateMult: 1.22, pitchMult: 1.24, volume: 1.0 },
+        calm: { label: 'Calm — Smooth, relaxed, and unhurried', rateMult: 0.88, pitchMult: 0.95, volume: 0.9 },
+        sad: { label: 'Sad — Slow, soft, and lower-pitched', rateMult: 0.78, pitchMult: 0.82, volume: 0.82 },
+        angry: { label: 'Angry — Firm, brisk, and forceful', rateMult: 1.15, pitchMult: 0.92, volume: 1.0 },
+        whisper: { label: 'Whisper — Soft and gentle hush', rateMult: 0.86, pitchMult: 1.04, volume: 0.45 },
+        dramatic: { label: 'Dramatic — Expressive and theatrical pacing', rateMult: 0.92, pitchMult: 1.18, volume: 1.0 },
+        curious: { label: 'Curious — Inquisitive and rising inflection', rateMult: 1.02, pitchMult: 1.14, volume: 0.95 },
+        encouraging: { label: 'Encouraging — Warm, motivating, and clear', rateMult: 1.04, pitchMult: 1.1, volume: 1.0 },
+        serious: { label: 'Serious — Measured, steady, and composed', rateMult: 0.9, pitchMult: 0.88, volume: 0.95 },
+      };
 
-        let colorIdx = startIndex;
-        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-        const textNodes = [];
-
-        let currentNode = walker.nextNode();
-        while (currentNode) {
-          if (currentNode.nodeValue && currentNode.nodeValue.trim().length > 0) {
-            textNodes.push(currentNode);
-          }
-          currentNode = walker.nextNode();
-        }
-
-        textNodes.forEach((node) => {
-          const fragment = document.createDocumentFragment();
-          // Split by whitespace while keeping separators intact
-          const tokens = node.nodeValue.split(/(\s+)/);
-
-          tokens.forEach((token) => {
-            if (!token) return;
-            if (/^\s+$/.test(token)) {
-              fragment.appendChild(document.createTextNode(token));
-            } else {
-              const span = document.createElement('span');
-              span.className = `${RAINBOW_COLORS[colorIdx % RAINBOW_COLORS.length]} font-semibold`;
-              span.textContent = token;
-              fragment.appendChild(span);
-              colorIdx += 1;
-            }
-          });
-
-          node.parentNode?.replaceChild(fragment, node);
-        });
-
-        return colorIdx;
-      }
-
-      /**
-       * Apply rainbow word coloring to the main title and visible page labels/buttons/paragraphs.
-       */
-      function applyRainbowWordsToPage() {
-        let idx = 0;
-        idx = colorWordsInElement(rainbowTitle, idx);
-
-        const targets = document.querySelectorAll(
-          'header p, section > div > span, section > div > div > span, label, button, footer span, #spokenPreviewText, #messageText'
-        );
-
-        targets.forEach((el) => {
-          // Skip inputs/selects/textareas and already-colored word spans
-          if (['INPUT', 'TEXTAREA', 'SELECT', 'OPTION'].includes(el.tagName)) return;
-          if (el.closest('[data-rainbow-applied="true"]')) return;
-          el.setAttribute('data-rainbow-applied', 'true');
-          idx = colorWordsInElement(el, idx);
-        });
-      }
-
-      // Check browser support for Web Speech Synthesis
-      const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
-      let voices = [];
-      let isPausedByUser = false;
-      let activeSpokenText = '';
-      let wordSpans = [];
-      let wordTokenMeta = [];
-      let currentHighlightedIndex = -1;
-      let pausedWordIndex = -1;
-      let fallbackTimerId = null;
-      let fallbackWordIndex = 0;
-      let playbackSessionId = 0;
-      let hasReceivedNativeBoundary = false;
-      let utteranceStartTimestamp = 0;
-      let wordCumulativeStartMs = [];
-
-      /**
-       * Escape HTML special characters for safe rendering.
-       * @param {string} str
-       * @returns {string}
-       */
       function escapeHtml(str) {
-        return String(str)
+        return String(str || '')
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
@@ -852,421 +631,20 @@
           .replace(/'/g, '&#39;');
       }
 
-      /**
-       * Clear any active fallback word highlight timer safely.
-       */
-      function clearFallbackWordTimer() {
-        if (fallbackTimerId !== null) {
-          clearTimeout(fallbackTimerId);
-          fallbackTimerId = null;
-        }
-      }
-
-      /**
-       * Display a non-blocking banner message to the user.
-       * @param {string} text
-       * @param {'info'|'success'|'warning'|'error'} [type='info']
-       */
-      function showMessage(text, type = 'info') {
+      function showMessage(msg, type = 'info') {
         if (!messageBox || !messageText) return;
-
-        messageBox.classList.remove(
-          'hidden',
-          'bg-sky-50',
-          'border-sky-200',
-          'text-sky-800',
-          'bg-emerald-50',
-          'border-emerald-200',
-          'text-emerald-800',
-          'bg-amber-50',
-          'border-amber-200',
-          'text-amber-900',
-          'bg-rose-50',
-          'border-rose-200',
-          'text-rose-800'
-        );
-
-        const styles = {
-          info: ['bg-sky-50', 'border-sky-200', 'text-sky-800'],
-          success: ['bg-emerald-50', 'border-emerald-200', 'text-emerald-800'],
-          warning: ['bg-amber-50', 'border-amber-200', 'text-amber-900'],
-          error: ['bg-rose-50', 'border-rose-200', 'text-rose-800'],
-        };
-
-        const chosen = styles[type] || styles.info;
-        messageBox.classList.add(...chosen);
-        messageText.textContent = text;
-        colorWordsInElement(messageText, 0);
-      }
-
-      /**
-       * Tokenize text into spoken word/CJK units and render interactive word spans
-       * in the live spoken preview box.
-       * @param {string} text
-       */
-      function buildSpokenPreviewWords(text) {
-        wordSpans = [];
-        wordTokenMeta = [];
-        currentHighlightedIndex = -1;
-        fallbackWordIndex = 0;
-
-        if (!spokenPreviewText) return;
-
-        const tokenRegex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]|[^\s\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
-        const fragment = document.createDocumentFragment();
-        let lastIndex = 0;
-        let match;
-        let tokenIdx = 0;
-
-        while ((match = tokenRegex.exec(text)) !== null) {
-          if (match.index > lastIndex) {
-            fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-          }
-
-          const wordStr = match[0];
-          const span = document.createElement('span');
-          span.className = `${RAINBOW_COLORS[tokenIdx % RAINBOW_COLORS.length]} inline-block rounded px-1 py-0.5 transition-transform duration-75`;
-          span.textContent = wordStr;
-          fragment.appendChild(span);
-
-          wordSpans.push(span);
-          wordTokenMeta.push({
-            index: tokenIdx,
-            word: wordStr,
-            start: match.index,
-            end: match.index + wordStr.length,
-          });
-
-          tokenIdx += 1;
-          lastIndex = match.index + wordStr.length;
+        messageText.textContent = msg;
+        messageBox.className = 'mb-5 p-4 rounded-2xl border text-sm transition-all duration-200 flex items-start justify-between gap-3 shadow-xs ';
+        if (type === 'error') {
+          messageBox.className += 'bg-rose-50 border-rose-300 text-rose-900';
+        } else if (type === 'warning') {
+          messageBox.className += 'bg-amber-50 border-amber-300 text-amber-950';
+        } else if (type === 'success') {
+          messageBox.className += 'bg-emerald-50 border-emerald-300 text-emerald-900';
+        } else {
+          messageBox.className += 'bg-sky-50 border-sky-300 text-sky-900';
         }
-
-        if (lastIndex < text.length) {
-          fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-        }
-
-        spokenPreviewText.innerHTML = '';
-        spokenPreviewText.appendChild(fragment);
-      }
-
-      /**
-       * Estimate spoken duration in milliseconds for a single token based on
-       * character length, punctuation pauses, and current playback rate.
-       * @param {string} word
-       * @param {number} rate
-       * @returns {number}
-       */
-      function estimateTokenDurationMs(word, rate) {
-        const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
-        const tone = EMOTION_TONES[selectedEmotionKey] || EMOTION_TONES.neutral;
-        const isCjk = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]/.test(word);
-        const endsWithPausePunct = /[,.;:!?，。；：！？、]$/.test(word);
-        const baseMs = isCjk
-          ? 215
-          : Math.min(620, Math.max(185, word.length * 48 + 95));
-        const pauseExtraMs = endsWithPausePunct ? 110 : 0;
-        return Math.max(95, Math.round(((baseMs + pauseExtraMs) * tone.paceFactor) / safeRate));
-      }
-
-      /**
-       * Precompute cumulative start offsets (in ms) for tokens starting at `startIdx`
-       * so fallback/drift-correction stays anchored to actual elapsed speech time.
-       * @param {number} startIdx
-       * @param {number} rate
-       */
-      function rebuildTimelineFromIndex(startIdx, rate) {
-        wordCumulativeStartMs = new Array(wordTokenMeta.length).fill(0);
-        if (!wordTokenMeta.length) return;
-        const safeStart = Math.max(0, Math.min(startIdx, wordTokenMeta.length - 1));
-        let elapsed = 0;
-        for (let i = safeStart; i < wordTokenMeta.length; i += 1) {
-          wordCumulativeStartMs[i] = elapsed;
-          elapsed += estimateTokenDurationMs(wordTokenMeta[i].word, rate);
-        }
-      }
-
-      /**
-       * Immediately apply highlight classes to the word at `index` with zero frame lag.
-       * @param {number} index
-       */
-      function applyHighlightClassesImmediate(index) {
-        if (!wordSpans.length) return;
-        const clamped = Math.max(0, Math.min(index, wordSpans.length - 1));
-
-        if (currentHighlightedIndex !== clamped && currentHighlightedIndex >= 0 && wordSpans[currentHighlightedIndex]) {
-          wordSpans[currentHighlightedIndex].classList.remove(
-            'bg-amber-300',
-            'text-slate-950',
-            'ring-2',
-            'ring-amber-500',
-            'scale-105',
-            'font-bold',
-            'shadow-xs'
-          );
-        }
-
-        currentHighlightedIndex = clamped;
-        fallbackWordIndex = clamped;
-        const activeSpan = wordSpans[clamped];
-        if (activeSpan) {
-          activeSpan.classList.add(
-            'bg-amber-300',
-            'text-slate-950',
-            'ring-2',
-            'ring-amber-500',
-            'scale-105',
-            'font-bold',
-            'shadow-xs'
-          );
-          activeSpan.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-        }
-      }
-
-      /**
-       * Highlight the word at the specified index in the spoken preview.
-       * @param {number} index
-       */
-      function highlightWordAtIndex(index) {
-        applyHighlightClassesImmediate(index);
-      }
-
-      /**
-       * Find the word index matching a speech boundary character offset.
-       * @param {number} charIndex
-       * @param {number} [charLength=0]
-       * @returns {number}
-       */
-      function findWordIndexByCharIndex(charIndex, charLength = 0) {
-        if (!wordTokenMeta.length || typeof charIndex !== 'number' || charIndex < 0) {
-          return -1;
-        }
-        const boundaryEnd = charIndex + Math.max(0, charLength);
-        for (let i = 0; i < wordTokenMeta.length; i += 1) {
-          const meta = wordTokenMeta[i];
-          if (charIndex >= meta.start && charIndex < meta.end) {
-            return meta.index;
-          }
-          if (charIndex < meta.start && boundaryEnd > meta.start) {
-            return meta.index;
-          }
-          if (charIndex < meta.start) {
-            return Math.max(0, i - 1);
-          }
-        }
-        return wordTokenMeta.length - 1;
-      }
-
-      /**
-       * Schedule synchronized per-token fallback highlighting anchored to elapsed
-       * wall-clock time so highlights never drift behind or ahead of speech.
-       * @param {number} rate
-       * @param {number} sessionId
-       * @param {number} startIdx
-       */
-      function startFallbackWordHighlight(rate = 1, sessionId = playbackSessionId, startIdx = 0) {
-        clearFallbackWordTimer();
-        if (!wordSpans.length || hasReceivedNativeBoundary || isPausedByUser) return;
-
-        const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
-        const anchorIdx = Math.max(0, Math.min(startIdx, wordSpans.length - 1));
-        rebuildTimelineFromIndex(anchorIdx, safeRate);
-        utteranceStartTimestamp = performance.now();
-        highlightWordAtIndex(anchorIdx);
-
-        const scheduleNextTick = () => {
-          if (sessionId !== playbackSessionId || isPausedByUser || hasReceivedNativeBoundary) {
-            clearFallbackWordTimer();
-            return;
-          }
-
-          const elapsedMs = performance.now() - utteranceStartTimestamp;
-          let targetIdx = anchorIdx;
-          for (let i = anchorIdx; i < wordSpans.length; i += 1) {
-            if (elapsedMs >= wordCumulativeStartMs[i]) {
-              targetIdx = i;
-            } else {
-              break;
-            }
-          }
-
-          if (targetIdx !== currentHighlightedIndex) {
-            highlightWordAtIndex(targetIdx);
-          }
-
-          const nextIdx = targetIdx + 1;
-          if (nextIdx < wordSpans.length) {
-            const waitMs = Math.max(25, Math.round(wordCumulativeStartMs[nextIdx] - elapsedMs));
-            fallbackTimerId = setTimeout(scheduleNextTick, waitMs);
-          } else {
-            clearFallbackWordTimer();
-          }
-        };
-
-        if (anchorIdx + 1 < wordSpans.length) {
-          const firstNextWait = Math.max(25, Math.round(wordCumulativeStartMs[anchorIdx + 1]));
-          fallbackTimerId = setTimeout(scheduleNextTick, firstNextWait);
-        }
-      }
-
-      /**
-       * Helper to build and launch a SpeechSynthesisUtterance starting at a specific word index,
-       * keeping word highlighting and speech boundary/fallback timing synchronized.
-       * @param {string} fullText
-       * @param {number} startWordIdx
-       * @param {boolean} rebuildPreview
-       */
-      function speakFromWordIndex(fullText, startWordIdx = 0, rebuildPreview = false) {
-        if (!synth || !fullText) return false;
-
-        if (synth.speaking || synth.pending || synth.paused) {
-          synth.cancel();
-        }
-
-        playbackSessionId += 1;
-        const currentSession = playbackSessionId;
-        hasReceivedNativeBoundary = false;
-        isPausedByUser = false;
-        pausedWordIndex = -1;
-        activeSpokenText = fullText;
-
-        if (rebuildPreview || wordTokenMeta.length === 0) {
-          buildSpokenPreviewWords(fullText);
-        }
-
-        const clampedStartIdx =
-          wordTokenMeta.length > 0
-            ? Math.max(0, Math.min(startWordIdx, wordTokenMeta.length - 1))
-            : 0;
-        const startMeta = wordTokenMeta[clampedStartIdx];
-        const baseOffset = startMeta ? startMeta.start : 0;
-        const spokenSlice = startMeta ? fullText.slice(baseOffset).trimStart() : fullText;
-        const trimmedLeadingOffset =
-          startMeta && fullText.length >= baseOffset
-            ? baseOffset + (fullText.slice(baseOffset).length - spokenSlice.length)
-            : 0;
-
-        if (!spokenSlice) {
-          setPlaybackState('idle');
-          return false;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(spokenSlice);
-        const selectedVoiceIdx = Number(voiceSelect.value);
-        if (!Number.isNaN(selectedVoiceIdx) && voices[selectedVoiceIdx]) {
-          utterance.voice = voices[selectedVoiceIdx];
-          utterance.lang = voices[selectedVoiceIdx].lang;
-        }
-
-        const speechSettings = getEffectiveSpeechSettings();
-        utterance.rate = speechSettings.rate;
-        utterance.pitch = speechSettings.pitch;
-        utterance.volume = speechSettings.volume;
-
-        let fallbackStartedForUtterance = false;
-
-        const beginFallbackIfNeeded = (fromIdx = clampedStartIdx) => {
-          if (
-            fallbackStartedForUtterance ||
-            hasReceivedNativeBoundary ||
-            currentSession !== playbackSessionId ||
-            isPausedByUser
-          ) {
-            return;
-          }
-          fallbackStartedForUtterance = true;
-          startFallbackWordHighlight(utterance.rate, currentSession, fromIdx);
-        };
-
-        utterance.onstart = () => {
-          if (currentSession !== playbackSessionId || isPausedByUser) return;
-          setPlaybackState('speaking');
-          utteranceStartTimestamp = performance.now();
-          if (wordSpans.length > 0) {
-            highlightWordAtIndex(clampedStartIdx);
-          }
-          if (!hasReceivedNativeBoundary) {
-            fallbackStartedForUtterance = false;
-            beginFallbackIfNeeded(clampedStartIdx);
-          }
-        };
-
-        utterance.onpause = () => {
-          if (currentSession !== playbackSessionId) return;
-          clearFallbackWordTimer();
-          if (currentHighlightedIndex >= 0 && pausedWordIndex < 0) {
-            pausedWordIndex = currentHighlightedIndex;
-          }
-          isPausedByUser = true;
-          setPlaybackState('paused');
-        };
-
-        utterance.onresume = () => {
-          if (currentSession !== playbackSessionId || isPausedByUser) return;
-          setPlaybackState('speaking');
-          if (!hasReceivedNativeBoundary) {
-            fallbackStartedForUtterance = false;
-            const resumeIdx = currentHighlightedIndex >= 0 ? currentHighlightedIndex : clampedStartIdx;
-            beginFallbackIfNeeded(resumeIdx);
-          }
-        };
-
-        utterance.onboundary = (event) => {
-          if (currentSession !== playbackSessionId || isPausedByUser) return;
-          if (!event || (event.name && event.name !== 'word' && event.name !== 'sentence')) {
-            return;
-          }
-          hasReceivedNativeBoundary = true;
-          clearFallbackWordTimer();
-
-          if (typeof event.charIndex === 'number' && event.charIndex >= 0) {
-            const charLen = typeof event.charLength === 'number' ? event.charLength : 0;
-            const absoluteCharIdx = trimmedLeadingOffset + event.charIndex;
-            const matchedIdx = findWordIndexByCharIndex(absoluteCharIdx, charLen);
-            if (matchedIdx !== -1) {
-              highlightWordAtIndex(matchedIdx);
-            }
-          }
-        };
-
-        utterance.onend = () => {
-          if (currentSession !== playbackSessionId || isPausedByUser) return;
-          clearFallbackWordTimer();
-          if (wordSpans.length > 0) {
-            highlightWordAtIndex(wordSpans.length - 1);
-          }
-          setPlaybackState('idle');
-        };
-
-        utterance.onerror = (event) => {
-          if (currentSession !== playbackSessionId) return;
-          if (isPausedByUser && (!event || event.error === 'interrupted' || event.error === 'canceled')) {
-            return;
-          }
-          clearFallbackWordTimer();
-          if (event && (event.error === 'interrupted' || event.error === 'canceled')) {
-            return;
-          }
-          setPlaybackState('idle');
-          if (event && event.error === 'not-allowed') {
-            showMessage(
-              'Speech playback was blocked by browser permissions. Try interacting with the page and clicking Pronounce again.',
-              'warning'
-            );
-            return;
-          }
-          showMessage(
-            'An issue occurred while pronouncing the text. Try another voice or shorter paragraph.',
-            'error'
-          );
-        };
-
-        setPlaybackState('speaking');
-        if (wordSpans.length > 0) {
-          highlightWordAtIndex(clampedStartIdx);
-        }
-        synth.speak(utterance);
-        beginFallbackIfNeeded(clampedStartIdx);
-        return true;
+        messageBox.classList.remove('hidden');
       }
 
       function hideMessage() {
@@ -1275,300 +653,673 @@
         }
       }
 
-      /**
-       * Update playback state indicator and button enabled/disabled states.
-       * @param {'idle'|'speaking'|'paused'} state
-       */
-      function setPlaybackState(state) {
-        statusDot.classList.remove('bg-emerald-500', 'bg-indigo-500', 'bg-amber-500', 'animate-pulse');
-
-        if (state === 'speaking') {
-          isPausedByUser = false;
-          statusDot.classList.add('bg-indigo-500', 'animate-pulse');
-          statusText.textContent = 'Pronouncing...';
-          pauseResumeBtn.disabled = false;
-          if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = false;
-          stopBtn.disabled = false;
-          pauseResumeText.textContent = 'Pause';
-          if (mobilePauseResumeText) mobilePauseResumeText.textContent = 'Pause';
-          spokenPreviewWrapper.classList.remove('hidden');
-        } else if (state === 'paused') {
-          isPausedByUser = true;
-          statusDot.classList.add('bg-amber-500');
-          statusText.textContent = 'Paused';
-          pauseResumeBtn.disabled = false;
-          if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = false;
-          stopBtn.disabled = false;
-          pauseResumeText.textContent = 'Resume';
-          if (mobilePauseResumeText) mobilePauseResumeText.textContent = 'Resume';
-          spokenPreviewWrapper.classList.remove('hidden');
-        } else {
-          isPausedByUser = false;
-          clearFallbackWordTimer();
-          currentHighlightedIndex = -1;
-          fallbackWordIndex = 0;
-          statusDot.classList.add('bg-emerald-500');
-          statusText.textContent = 'Ready';
-          pauseResumeBtn.disabled = true;
-          if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = true;
-          stopBtn.disabled = true;
-          pauseResumeText.textContent = 'Pause';
-          if (mobilePauseResumeText) mobilePauseResumeText.textContent = 'Pause';
-          spokenPreviewWrapper.classList.add('hidden');
-          spokenPreviewText.innerHTML = '';
+      function clearFallbackWordTimer() {
+        if (fallbackTimerId !== null) {
+          clearTimeout(fallbackTimerId);
+          fallbackTimerId = null;
         }
       }
 
-      /**
-       * Update live word and character counters for the text area.
-       */
       function updateCounts() {
-        const text = textInput.value || '';
-        const chars = text.length;
-        const trimmed = text.trim();
-        const words = trimmed ? trimmed.split(/\s+/).length : 0;
-
-        charCountEl.textContent = `${chars.toLocaleString()} ${chars === 1 ? 'character' : 'characters'}`;
-        wordCountEl.textContent = `${words.toLocaleString()} ${words === 1 ? 'word' : 'words'}`;
+        const raw = textInput ? textInput.value || '' : '';
+        const trimmed = raw.trim();
+        const words = trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
+        const chars = raw.length;
+        if (wordCountEl) wordCountEl.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
+        if (charCountEl) charCountEl.textContent = `${chars} ${chars === 1 ? 'character' : 'characters'}`;
       }
 
-      /**
-       * Populate available system/browser speech voices into the select dropdown.
-       */
+      function setActiveEmotion(emotionKey) {
+        activeEmotion = EMOTION_CONFIGS[emotionKey] ? emotionKey : 'neutral';
+        const config = EMOTION_CONFIGS[activeEmotion];
+        if (activeEmotionBadge) {
+          activeEmotionBadge.textContent = config.label;
+        }
+        emotionButtons.forEach((btn) => {
+          const isSelected = btn.getAttribute('data-emotion') === activeEmotion;
+          btn.classList.toggle('ring-2', isSelected);
+          btn.classList.toggle('ring-fuchsia-500', isSelected);
+          btn.classList.toggle('bg-fuchsia-100', isSelected);
+          btn.classList.toggle('font-bold', isSelected);
+        });
+      }
+
+      function setPlaybackState(nextState) {
+        playbackState = nextState;
+        if (statusText) {
+          if (nextState === 'speaking') statusText.textContent = 'Pronouncing';
+          else if (nextState === 'paused') statusText.textContent = 'Paused';
+          else statusText.textContent = 'Ready';
+        }
+        if (statusDot) {
+          statusDot.className = 'w-2.5 h-2.5 rounded-full ';
+          if (nextState === 'speaking') statusDot.className += 'bg-rose-500 animate-pulse';
+          else if (nextState === 'paused') statusDot.className += 'bg-amber-500';
+          else statusDot.className += 'bg-emerald-500';
+        }
+
+        const isActive = nextState === 'speaking' || nextState === 'paused';
+        const isPaused = nextState === 'paused';
+
+        if (pauseResumeBtn) pauseResumeBtn.disabled = !isActive;
+        if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = !isActive;
+        if (stopBtn) stopBtn.disabled = !isActive;
+
+        const label = isPaused ? 'Resume' : 'Pause';
+        if (pauseResumeText) pauseResumeText.textContent = label;
+        if (mobilePauseResumeText) mobilePauseResumeText.textContent = label;
+      }
+
       function populateVoices() {
-        if (!synth) {
-          voiceSelect.innerHTML = '<option value="">Speech synthesis not supported</option>';
-          voiceCountLabel.textContent = 'Unsupported browser';
-          return;
-        }
-
+        if (!synth || !voiceSelect) return;
         try {
-          const previouslySelected = voiceSelect.value;
           voices = synth.getVoices() || [];
+        } catch (err) {
+          voices = [];
+        }
 
+        if (voiceCountLabel) {
           voiceCountLabel.textContent = `${voices.length} ${voices.length === 1 ? 'voice' : 'voices'} detected`;
+        }
 
-          if (voices.length === 0) {
-            voiceSelect.innerHTML = '<option value="">Default System Voice</option>';
-            return;
-          }
+        const previousValue = voiceSelect.value;
+        voiceSelect.innerHTML = '';
 
-          // Sort voices with default voices first, then alphabetically by name
-          const sortedVoices = [...voices].sort((a, b) => {
-            if (a.default && !b.default) return -1;
-            if (!a.default && b.default) return 1;
-            return a.name.localeCompare(b.name);
-          });
+        if (!voices.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Default System Voice';
+          voiceSelect.appendChild(opt);
+          return;
+        }
 
-          voiceSelect.innerHTML = '';
-          sortedVoices.forEach((voice) => {
-            const index = voices.indexOf(voice);
-            const option = document.createElement('option');
-            option.value = String(index);
-            const defaultTag = voice.default ? ' — Default' : '';
-            option.textContent = `${voice.name} (${voice.lang})${defaultTag}`;
-            voiceSelect.appendChild(option);
-          });
+        voices.forEach((voice, idx) => {
+          const opt = document.createElement('option');
+          opt.value = String(idx);
+          opt.textContent = `${voice.name} (${voice.lang})${voice.default ? ' — Default' : ''}`;
+          voiceSelect.appendChild(opt);
+        });
 
-          if (previouslySelected && voices[Number(previouslySelected)]) {
-            voiceSelect.value = previouslySelected;
-          } else {
-            const defaultIdx = voices.findIndex((v) => v.default);
-            if (defaultIdx !== -1) {
-              voiceSelect.value = String(defaultIdx);
-            }
-          }
-        } catch (err) {
-          showMessage('Could not load speech voices cleanly. Using default voice if available.', 'warning');
+        if (previousValue && Number(previousValue) < voices.length) {
+          voiceSelect.value = previousValue;
+        } else {
+          const defaultIdx = voices.findIndex((v) => v.default);
+          voiceSelect.value = String(defaultIdx !== -1 ? defaultIdx : 0);
         }
       }
 
-      /**
-       * Speak the current text from the textarea.
-       */
-      function pronounceText() {
-        hideMessage();
+      function tokenizeForSpeech(text) {
+        const tokens = [];
+        const regex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]|[^\s\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]+|\s+/g;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          const raw = match[0];
+          const isSpace = /^\s+$/.test(raw);
+          const isSpeakable = !isSpace && /[\p{L}\p{N}]/u.test(raw);
+          tokens.push({
+            raw,
+            start: match.index,
+            end: match.index + raw.length,
+            isSpace,
+            isSpeakable,
+            wordIndex: -1,
+          });
+        }
+        let wordCounter = 0;
+        tokens.forEach((tok) => {
+          if (tok.isSpeakable) {
+            tok.wordIndex = wordCounter++;
+          }
+        });
+        return tokens;
+      }
 
+      function buildSpokenPreviewWords(tokens) {
+        if (!spokenPreviewText) return;
+        const html = tokens
+          .map((tok) => {
+            if (tok.isSpace) {
+              return escapeHtml(tok.raw).replace(/\n/g, '<br>');
+            }
+            if (!tok.isSpeakable) {
+              return `<span class="text-slate-600">${escapeHtml(tok.raw)}</span>`;
+            }
+            return `<span data-word-idx="${tok.wordIndex}" class="spoken-word px-1 py-0.5 rounded-md transition-colors duration-75">${escapeHtml(tok.raw)}</span>`;
+          })
+          .join('');
+        spokenPreviewText.innerHTML = html;
+      }
+
+      function highlightWordAtIndex(wordIdx) {
+        currentWordIndex = wordIdx;
+        if (!spokenPreviewText) return;
+        const spans = spokenPreviewText.querySelectorAll('.spoken-word');
+        spans.forEach((span) => {
+          const idx = Number(span.getAttribute('data-word-idx'));
+          const isCurrent = idx === wordIdx;
+          span.classList.toggle('bg-amber-300', isCurrent);
+          span.classList.toggle('text-slate-950', isCurrent);
+          span.classList.toggle('font-bold', isCurrent);
+          span.classList.toggle('shadow-2xs', isCurrent);
+          if (isCurrent) {
+            try {
+              span.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+            } catch (err) {
+              // Ignore scroll errors in restricted contexts
+            }
+          }
+        });
+      }
+
+      function getSpeakableStartOffset(wordIdx) {
+        const target = spokenTokens.find((t) => t.isSpeakable && t.wordIndex === Math.max(0, wordIdx));
+        return target ? target.start : 0;
+      }
+
+      function findWordIndexAtCharOffset(charOffset) {
+        for (let i = 0; i < spokenTokens.length; i++) {
+          const tok = spokenTokens[i];
+          if (tok.isSpeakable && charOffset >= tok.start && charOffset <= tok.end + 1) {
+            return tok.wordIndex;
+          }
+        }
+        for (let i = 0; i < spokenTokens.length; i++) {
+          const tok = spokenTokens[i];
+          if (tok.isSpeakable && tok.start >= charOffset) {
+            return tok.wordIndex;
+          }
+        }
+        return currentWordIndex >= 0 ? currentWordIndex : 0;
+      }
+
+      function speakFromWordIndex(startWordIdx, sessionId) {
         if (!synth) {
-          showMessage('Sorry, your browser does not support the Web Speech API for pronouncing text.', 'error');
-          return;
-        }
-
-        const content = (textInput.value || '').trim();
-        if (!content) {
-          showMessage('Please type or paste some text or a paragraph before clicking Pronounce.', 'warning');
-          textInput.focus();
-          return;
-        }
-
-        // If currently paused on the same text, resume from the previous word instead of starting over
-        if (isPausedByUser && activeSpokenText === content && wordTokenMeta.length > 0) {
-          resumeFromCurrentWord(true);
-          return;
-        }
-
-        try {
-          speakFromWordIndex(content, 0, true);
-        } catch (err) {
-          clearFallbackWordTimer();
-          setPlaybackState('idle');
-          showMessage('Unable to start pronunciation due to an unexpected error.', 'error');
-        }
-      }
-
-      /**
-       * Resume pronunciation from the previous word before pausing.
-       * @param {boolean} [_fromCurrentWord=false]
-       */
-      function resumeFromCurrentWord(_fromCurrentWord = false) {
-        if (!synth) return;
-
-        const targetText = (activeSpokenText || textInput.value || '').trim();
-        if (!targetText) {
+          showMessage('Speech synthesis is not supported in this browser.', 'error');
           setPlaybackState('idle');
           return;
         }
 
-        const baseIdx =
-          pausedWordIndex >= 0
-            ? pausedWordIndex
-            : currentHighlightedIndex >= 0
-              ? currentHighlightedIndex
-              : fallbackWordIndex;
-        // Step back one word so playback starts on the previous word
-        const startIdx = Math.max(0, baseIdx - 1);
-
-        try {
-          if (synth.paused && wordTokenMeta.length === 0) {
-            isPausedByUser = false;
-            pausedWordIndex = -1;
-            synth.resume();
-            setPlaybackState('speaking');
-            return;
-          }
-
-          const started = speakFromWordIndex(targetText, startIdx, wordTokenMeta.length === 0);
-          if (!started) {
-            setPlaybackState('idle');
-          }
-        } catch (err) {
-          setPlaybackState('idle');
-          showMessage('Could not resume pronunciation cleanly.', 'warning');
-        }
-      }
-
-      /**
-       * Toggle pause and resume on active speech synthesis at any time.
-       */
-      function togglePauseResume() {
-        if (!synth) return;
-
-        try {
-          const isCurrentlyActive =
-            !isPausedByUser &&
-            (synth.speaking ||
-              synth.pending ||
-              fallbackTimerId !== null ||
-              currentHighlightedIndex >= 0);
-
-          if (isCurrentlyActive) {
-            const activeWordBeforePause =
-              currentHighlightedIndex >= 0
-                ? currentHighlightedIndex
-                : fallbackWordIndex >= 0
-                  ? fallbackWordIndex
-                  : 0;
-            pausedWordIndex = activeWordBeforePause;
-            isPausedByUser = true;
-            // Bump session ID before stopping so stale utterance events cannot overwrite paused state
-            playbackSessionId += 1;
-            clearFallbackWordTimer();
-
-            try {
-              synth.pause();
-            } catch (pauseErr) {
-              // Ignore browsers that throw on pause()
-            }
-
-            // Always cancel queued/active speech immediately so pause reliably stops audio
-            // across Chrome, Edge, Safari, and speech voices that ignore synth.pause()
-            try {
-              synth.cancel();
-            } catch (cancelErr) {
-              // Ignore cancel failure
-            }
-
-            setPlaybackState('paused');
-            if (wordSpans.length > 0) {
-              const previousWordIdx = Math.max(0, activeWordBeforePause - 1);
-              highlightWordAtIndex(previousWordIdx);
-            }
-          } else if (isPausedByUser || synth.paused) {
-            resumeFromCurrentWord(true);
-          }
-        } catch (err) {
-          showMessage('Pause/Resume is not supported for this voice in your browser.', 'warning');
-        }
-      }
-
-      /**
-       * Stop speech synthesis immediately.
-       */
-      function stopSpeech() {
-        if (!synth) return;
-        isPausedByUser = false;
-        pausedWordIndex = -1;
-        playbackSessionId += 1;
-        hasReceivedNativeBoundary = false;
         clearFallbackWordTimer();
+        const fullSourceText = activeSpokenSourceText || (textInput ? textInput.value || '' : '');
+        const charOffset = getSpeakableStartOffset(startWordIdx);
+        const sliceRaw = fullSourceText.slice(charOffset);
+        const leadingTrimLen = sliceRaw.length - sliceRaw.trimStart().length;
+        const effectiveOffset = charOffset + leadingTrimLen;
+        const utteranceText = sliceRaw.trim();
+
+        if (!utteranceText) {
+          stopSpeech();
+          return;
+        }
+
+        const initialWordIdx = findWordIndexAtCharOffset(effectiveOffset);
+        highlightWordAtIndex(initialWordIdx);
+
+        const emotionCfg = EMOTION_CONFIGS[activeEmotion] || EMOTION_CONFIGS.neutral;
+        const baseRate = parseFloat(rateRange ? rateRange.value : '1') || 1;
+        const basePitch = parseFloat(pitchRange ? pitchRange.value : '1') || 1;
+
+        const utterance = new SpeechSynthesisUtterance(utteranceText);
+        utterance.rate = Math.min(2, Math.max(0.1, baseRate * emotionCfg.rateMult));
+        utterance.pitch = Math.min(2, Math.max(0, basePitch * emotionCfg.pitchMult));
+        utterance.volume = Math.min(1, Math.max(0, emotionCfg.volume));
+
+        const selectedVoiceIdx = voiceSelect ? parseInt(voiceSelect.value, 10) : NaN;
+        if (!Number.isNaN(selectedVoiceIdx) && voices[selectedVoiceIdx]) {
+          utterance.voice = voices[selectedVoiceIdx];
+          if (voices[selectedVoiceIdx].lang) {
+            utterance.lang = voices[selectedVoiceIdx].lang;
+          }
+        }
+
+        const speakableWords = spokenTokens.filter((t) => t.isSpeakable);
+        const startPosInSpeakable = Math.max(
+          0,
+          speakableWords.findIndex((t) => t.wordIndex >= initialWordIdx)
+        );
+        const remainingWords = speakableWords.slice(startPosInSpeakable);
+        const totalWordsToSpeak = Math.max(1, remainingWords.length);
+        const msPerWord = Math.max(140, Math.round(330 / Math.max(0.5, utterance.rate)));
+        const startedAt = performance.now();
+        let sawBoundaryEvent = false;
+
+        const scheduleFallbackTick = () => {
+          if (sessionId !== activeSessionId || playbackState !== 'speaking' || sawBoundaryEvent) return;
+          const elapsed = performance.now() - startedAt;
+          const step = Math.min(totalWordsToSpeak - 1, Math.floor(elapsed / msPerWord));
+          const targetWord = remainingWords[step];
+          if (targetWord) {
+            highlightWordAtIndex(targetWord.wordIndex);
+          }
+          if (step < totalWordsToSpeak - 1) {
+            fallbackTimerId = setTimeout(scheduleFallbackTick, 60);
+          }
+        };
+
+        utterance.onstart = () => {
+          if (sessionId !== activeSessionId) return;
+          setPlaybackState('speaking');
+          highlightWordAtIndex(initialWordIdx);
+          fallbackTimerId = setTimeout(scheduleFallbackTick, msPerWord);
+        };
+
+        utterance.onboundary = (event) => {
+          if (sessionId !== activeSessionId || playbackState !== 'speaking') return;
+          if (event && event.name && event.name !== 'word' && event.name !== 'sentence') return;
+          sawBoundaryEvent = true;
+          clearFallbackWordTimer();
+          const localIdx = typeof event.charIndex === 'number' ? event.charIndex : 0;
+          const globalOffset = effectiveOffset + localIdx;
+          const matchedWord = findWordIndexAtCharOffset(globalOffset);
+          highlightWordAtIndex(matchedWord);
+        };
+
+        utterance.onend = () => {
+          if (sessionId !== activeSessionId) return;
+          clearFallbackWordTimer();
+          activeUtterance = null;
+          setPlaybackState('idle');
+          highlightWordAtIndex(-1);
+        };
+
+        utterance.onerror = (event) => {
+          if (sessionId !== activeSessionId) return;
+          clearFallbackWordTimer();
+          activeUtterance = null;
+          if (event && event.error !== 'canceled' && event.error !== 'interrupted') {
+            showMessage(`Speech playback encountered an issue (${event.error}).`, 'warning');
+          }
+          setPlaybackState('idle');
+        };
+
+        activeUtterance = utterance;
         try {
           synth.cancel();
         } catch (err) {
-          // Ignore cancel errors on cleanup
-        } finally {
+          // Ignore cancel error before speaking
+        }
+        try {
+          synth.speak(utterance);
+        } catch (err) {
+          clearFallbackWordTimer();
+          activeUtterance = null;
           setPlaybackState('idle');
+          showMessage('Unable to start speech synthesis in this browser.', 'error');
         }
       }
 
-      /**
-       * Copy typed text to clipboard using execCommand fallback safe in iframes.
-       */
-      function copyTypedText() {
-        const text = textInput.value || '';
-        if (!text.trim()) {
-          showMessage('There is no text to copy yet.', 'warning');
+      function pronounceText(overrideText) {
+        hideMessage();
+        const rawText = typeof overrideText === 'string'
+          ? overrideText
+          : (textInput ? textInput.value || '' : '');
+        if (!rawText.trim()) {
+          showMessage('Please type or paste some text or a paragraph before pronouncing.', 'warning');
+          if (textInput) textInput.focus();
           return;
         }
 
-        try {
-          textInput.select();
-          textInput.setSelectionRange(0, text.length);
-          const successful = document.execCommand('copy');
-          window.getSelection()?.removeAllRanges();
+        if (!synth) {
+          showMessage('Your browser does not support SpeechSynthesis.', 'error');
+          return;
+        }
 
-          if (successful) {
-            copyBtnText.textContent = 'Copied!';
-            showMessage('Text copied to clipboard.', 'success');
-            setTimeout(() => {
-              copyBtnText.textContent = 'Copy Text';
-            }, 1800);
-          } else {
-            showMessage('Could not automatically copy text. You can select it and press Ctrl+C / Cmd+C.', 'warning');
+        if (playbackState === 'paused') {
+          resumeFromCurrentWord();
+          return;
+        }
+
+        activeSessionId += 1;
+        const sessionId = activeSessionId;
+        activeSpokenSourceText = rawText;
+        spokenTokens = tokenizeForSpeech(rawText);
+        buildSpokenPreviewWords(spokenTokens);
+        if (spokenPreviewWrapper) {
+          spokenPreviewWrapper.classList.remove('hidden');
+        }
+        setPlaybackState('speaking');
+        speakFromWordIndex(0, sessionId);
+      }
+
+      function resumeFromCurrentWord() {
+        const resumeWordIdx = Math.max(0, (currentWordIndex >= 0 ? currentWordIndex : 0) - 1);
+        activeSessionId += 1;
+        const sessionId = activeSessionId;
+        setPlaybackState('speaking');
+        speakFromWordIndex(resumeWordIdx, sessionId);
+      }
+
+      function togglePauseResume() {
+        if (!synth) return;
+        if (playbackState === 'speaking') {
+          activeSessionId += 1;
+          clearFallbackWordTimer();
+          setPlaybackState('paused');
+          try {
+            synth.cancel();
+          } catch (err) {
+            // Ignore cancel error on pause
           }
-        } catch (err) {
-          showMessage('Copy failed in this environment. Please copy manually.', 'warning');
+          activeUtterance = null;
+          if (currentWordIndex >= 0) {
+            highlightWordAtIndex(currentWordIndex);
+          }
+        } else if (playbackState === 'paused') {
+          resumeFromCurrentWord();
+        }
+      }
+
+      function stopSpeech() {
+        activeSessionId += 1;
+        clearFallbackWordTimer();
+        activeUtterance = null;
+        if (synth) {
+          try {
+            synth.cancel();
+          } catch (err) {
+            // Ignore cancel error
+          }
+        }
+        currentWordIndex = -1;
+        highlightWordAtIndex(-1);
+        setPlaybackState('idle');
+      }
+
+      function clearText() {
+        hideMessage();
+        stopSpeech();
+        activeSpokenSourceText = '';
+        if (textInput) {
+          textInput.value = '';
+          updateCounts();
+          textInput.focus();
+        }
+        if (spokenPreviewText) {
+          spokenPreviewText.innerHTML = '';
+        }
+        if (spokenPreviewWrapper) {
+          spokenPreviewWrapper.classList.add('hidden');
         }
       }
 
       /**
-       * Clear text input and stop any active pronunciation.
+       * Detect whether the user is viewing on a smartphone-sized or mobile device.
        */
-      function clearText() {
-        stopSpeech();
+      function isSmartphoneDevice() {
+        const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
+        const mobileUa = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) && !/iPad|Tablet/i.test(ua);
+        const narrowViewport = typeof window !== 'undefined' ? window.innerWidth <= 767 : false;
+        return mobileUa || narrowViewport;
+      }
+
+      /**
+       * Swap action buttons into the top bar on smartphone mode and restore them otherwise.
+       */
+      function applySmartphoneModeLayout() {
+        const isMobile = isSmartphoneDevice();
+        document.body.classList.toggle('mobile-device-mode', isMobile);
+
+        if (!mobileTopButtonsBar || !mobileMovedButtonsSlot || !desktopActionButtonsBar) {
+          return;
+        }
+
+        const buttonsToMove = [stopBtn, translateBtn, copyBtn, clearBtn].filter(Boolean);
+
+        if (isMobile) {
+          mobileTopButtonsBar.classList.remove('hidden');
+          buttonsToMove.forEach((btn) => {
+            if (btn.parentElement !== mobileMovedButtonsSlot) {
+              mobileMovedButtonsSlot.appendChild(btn);
+            }
+          });
+        } else {
+          mobileTopButtonsBar.classList.add('hidden');
+          const primaryTarget = primaryActionGroup || desktopActionButtonsBar;
+          const secondaryTarget = secondaryActionGroup || desktopActionButtonsBar;
+          [stopBtn, translateBtn].filter(Boolean).forEach((btn) => {
+            if (btn.parentElement !== primaryTarget) {
+              primaryTarget.appendChild(btn);
+            }
+          });
+          [copyBtn, clearBtn].filter(Boolean).forEach((btn) => {
+            if (btn.parentElement !== secondaryTarget) {
+              secondaryTarget.appendChild(btn);
+            }
+          });
+        }
+      }
+
+      /**
+       * Select a matching speech synthesis voice for the target language when available.
+       */
+      function selectVoiceForLanguage(targetLang) {
+        if (!voiceSelect || !voices || !voices.length || !targetLang) return;
+        const normalizedTarget = String(targetLang).toLowerCase();
+        const baseTarget = normalizedTarget.split('-')[0];
+
+        const matchedIndex = voices.findIndex((v) => {
+          const vLang = String(v.lang || '').toLowerCase();
+          return vLang === normalizedTarget || vLang.startsWith(baseTarget);
+        });
+
+        if (matchedIndex !== -1) {
+          voiceSelect.value = String(matchedIndex);
+        }
+      }
+
+      function copyTypedText() {
+        const val = textInput ? textInput.value || '' : '';
+        if (!val.trim()) {
+          showMessage('There is no text to copy yet.', 'warning');
+          return;
+        }
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(val).catch(() => {});
+          }
+          const helper = document.createElement('textarea');
+          helper.value = val;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          document.execCommand('copy');
+          document.body.removeChild(helper);
+
+          if (copyBtnText) {
+            const prev = copyBtnText.textContent;
+            copyBtnText.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtnText.textContent = prev || 'Copy Text';
+            }, 1500);
+          }
+          showMessage('Text copied to clipboard.', 'success');
+        } catch (err) {
+          showMessage('Unable to copy text automatically in this browser.', 'warning');
+        }
+      }
+
+      function colorWordsInElement(el, startColorIdx = 0) {
+        if (!el) return;
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+        const textNodes = [];
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.nodeValue && node.nodeValue.trim()) {
+            textNodes.push(node);
+          }
+        }
+
+        let colorCursor = startColorIdx;
+        textNodes.forEach((textNode) => {
+          const parts = textNode.nodeValue.split(/(\s+)/);
+          const frag = document.createDocumentFragment();
+          parts.forEach((part) => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) {
+              frag.appendChild(document.createTextNode(part));
+            } else {
+              const span = document.createElement('span');
+              span.textContent = part;
+              span.classList.add(RAINBOW_CLASSES[colorCursor % RAINBOW_CLASSES.length]);
+              colorCursor += 1;
+              frag.appendChild(span);
+            }
+          });
+          if (textNode.parentNode) {
+            textNode.parentNode.replaceChild(frag, textNode);
+          }
+        });
+      }
+
+      function applyRainbowWordsToPage() {
+        if (rainbowTitle) {
+          const titleStr = rainbowTitle.textContent || '';
+          rainbowTitle.textContent = '';
+          Array.from(titleStr).forEach((ch, idx) => {
+            const span = document.createElement('span');
+            span.textContent = ch;
+            if (!/^\s+$/.test(ch)) {
+              span.classList.add(RAINBOW_CLASSES[idx % RAINBOW_CLASSES.length]);
+            }
+            rainbowTitle.appendChild(span);
+          });
+        }
+
+        document.querySelectorAll('button').forEach((btn, i) => {
+          colorWordsInElement(btn, i);
+        });
+      }
+
+      sampleButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const sample = btn.getAttribute('data-sample') || '';
+          stopSpeech();
+          hideMessage();
+          if (textInput) {
+            textInput.value = sample;
+            updateCounts();
+            textInput.focus();
+          }
+        });
+      });
+
+      emotionButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const emotion = btn.getAttribute('data-emotion') || 'neutral';
+          setActiveEmotion(emotion);
+        });
+      });
+
+      /**
+       * Decode common HTML entities returned by translation APIs.
+       */
+      function decodeHtmlEntities(str) {
+        if (!str) return '';
+        const helper = document.createElement('textarea');
+        helper.innerHTML = String(str);
+        return helper.value;
+      }
+
+      /**
+       * Detect a likely source language code for translation pair construction.
+       */
+      function detectSourceLang(text, targetLang) {
+        const hasCJK = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]/.test(text);
+        const hasHiraganaKatakana = /[\u3040-\u30ff]/.test(text);
+        const hasHangul = /[\uac00-\ud7af]/.test(text);
+
+        let source = 'en';
+        if (hasHiraganaKatakana) source = 'ja';
+        else if (hasHangul) source = 'ko';
+        else if (hasCJK) source = 'zh-TW';
+
+        const normSource = source.toLowerCase();
+        const normTarget = String(targetLang || '').toLowerCase();
+        if (normSource === normTarget || (normSource.startsWith('zh') && normTarget.startsWith('zh'))) {
+          source = normTarget.startsWith('en') ? 'zh-TW' : 'en';
+        }
+        return source;
+      }
+
+      /**
+       * Translate the current text input into the chosen target language and pronounce it.
+       */
+      async function translateTypedText() {
         hideMessage();
-        textInput.value = '';
-        updateCounts();
-        textInput.focus();
+        const sourceText = textInput ? (textInput.value || '').trim() : '';
+        if (!sourceText) {
+          showMessage('Please type or paste some text before translating.', 'warning');
+          if (textInput) textInput.focus();
+          return;
+        }
+
+        const targetLang = translateLangSelect ? translateLangSelect.value || 'zh-TW' : 'zh-TW';
+        const prevBtnLabel = translateBtnText ? translateBtnText.textContent : 'Translate';
+
+        if (translateBtn) translateBtn.disabled = true;
+        if (translateBtnText) translateBtnText.textContent = 'Translating...';
+
+        try {
+          const sourceLang = detectSourceLang(sourceText, targetLang);
+          let translated = '';
+
+          // Primary: MyMemory translation API with detected source language
+          try {
+            const langPair = `${sourceLang}|${targetLang}`;
+            const endpoint = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=${encodeURIComponent(langPair)}`;
+            const response = await fetch(endpoint);
+            if (response.ok) {
+              const data = await response.json();
+              const rawTranslated = data && data.responseData && data.responseData.translatedText
+                ? String(data.responseData.translatedText).trim()
+                : '';
+              const upper = rawTranslated.toUpperCase();
+              const isQuotaOrInvalid =
+                upper.includes('MYMEMORY WARNING') ||
+                upper.includes('INVALID LANGUAGE PAIR') ||
+                upper.includes('QUERY LENGTH LIMIT');
+              if (rawTranslated && !isQuotaOrInvalid) {
+                translated = decodeHtmlEntities(rawTranslated);
+              }
+            }
+          } catch (primaryErr) {
+            // Fall through to secondary endpoint
+          }
+
+          // Fallback: Google gtx public translate endpoint
+          if (!translated) {
+            const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(sourceText)}`;
+            const gtxResponse = await fetch(gtxUrl);
+            if (!gtxResponse.ok) {
+              throw new Error(`Translation request failed (${gtxResponse.status})`);
+            }
+            const gtxData = await gtxResponse.json();
+            if (Array.isArray(gtxData) && Array.isArray(gtxData[0])) {
+              translated = gtxData[0]
+                .map((segment) => (Array.isArray(segment) && segment[0] ? String(segment[0]) : ''))
+                .join('')
+                .trim();
+            }
+          }
+
+          if (!translated) {
+            throw new Error('Empty translation result');
+          }
+
+          // Keep the original text intact in textInput and pronounce the translated result
+          stopSpeech();
+          selectVoiceForLanguage(targetLang);
+          applyRainbowWordsToPage();
+          showMessage(`Original text kept. Translated to ${targetLang}.`, 'success');
+          pronounceText(translated);
+        } catch (err) {
+          showMessage('Could not translate text right now. Please check your connection and try again.', 'warning');
+        } finally {
+          if (translateBtn) translateBtn.disabled = false;
+          if (translateBtnText) translateBtnText.textContent = prevBtnLabel || 'Translate';
+        }
       }
 
       // Event Listeners
@@ -1603,6 +1354,9 @@
       }
       pauseResumeBtn.addEventListener('click', togglePauseResume);
       stopBtn.addEventListener('click', stopSpeech);
+      if (translateBtn) {
+        translateBtn.addEventListener('click', translateTypedText);
+      }
       copyBtn.addEventListener('click', copyTypedText);
       clearBtn.addEventListener('click', clearText);
       closeMessageBtn.addEventListener('click', hideMessage);
