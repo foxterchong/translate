@@ -200,7 +200,7 @@
 
         <button
           type="button"
-          id="topStopBtn"
+          id="stopBtn"
           disabled
           class="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 disabled:opacity-40 disabled:pointer-events-none text-rose-700 font-semibold text-sm border border-rose-200 transition cursor-pointer touch-manipulation"
         >
@@ -212,13 +212,13 @@
 
         <button
           type="button"
-          id="topTranslateBtn"
+          id="translateBtn"
           class="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold text-sm border border-fuchsia-700 shadow-2xs transition cursor-pointer touch-manipulation"
         >
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
           </svg>
-          <span id="topTranslateBtnText">Translate</span>
+          <span id="translateBtnText">Translate</span>
         </button>
       </div>
 
@@ -481,45 +481,9 @@
             class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 disabled:opacity-40 disabled:pointer-events-none text-rose-700 font-semibold text-sm border border-rose-200 transition cursor-pointer"
           >
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6 6h12v12H6z" />
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
-            <span>Stop</span>
-          </button>
-
-          <button
-            type="button"
-            id="translateBtn"
-            class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold text-sm border border-fuchsia-700 shadow-2xs transition cursor-pointer"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-            </svg>
-            <span id="translateBtnText">Translate</span>
-          </button>
-        </div>
-
-        <!-- Secondary Utility Actions -->
-        <div class="flex items-center gap-2.5">
-          <button
-            type="button"
-            id="copyBtn"
-            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-800 text-sm font-semibold border border-sky-200 transition cursor-pointer"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span id="copyBtnText">Copy Text</span>
-          </button>
-
-          <button
-            type="button"
-            id="clearBtn"
-            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-sm font-semibold border border-purple-200 transition cursor-pointer"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span>Clear</span>
+            <span id="pauseResumeText">Pause</span>
           </button>
         </div>
       </div>
@@ -557,15 +521,9 @@
       const mobileSpeakBtn = document.getElementById('mobileSpeakBtn');
       const mobilePauseResumeBtn = document.getElementById('mobilePauseResumeBtn');
       const mobilePauseResumeText = document.getElementById('mobilePauseResumeText');
-      const topStopBtn = document.getElementById('topStopBtn');
-      const topTranslateBtn = document.getElementById('topTranslateBtn');
-      const topTranslateBtnText = document.getElementById('topTranslateBtnText');
       const pauseResumeBtn = document.getElementById('pauseResumeBtn');
       const pauseResumeText = document.getElementById('pauseResumeText');
       const stopBtn = document.getElementById('stopBtn');
-      const copyBtn = document.getElementById('copyBtn');
-      const copyBtnText = document.getElementById('copyBtnText');
-      const clearBtn = document.getElementById('clearBtn');
       const translateBtn = document.getElementById('translateBtn');
       const translateBtnText = document.getElementById('translateBtnText');
 
@@ -709,7 +667,6 @@
         if (pauseResumeBtn) pauseResumeBtn.disabled = !isActive;
         if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = !isActive;
         if (stopBtn) stopBtn.disabled = !isActive;
-        if (topStopBtn) topStopBtn.disabled = !isActive;
 
         const label = isPaused ? 'Resume' : 'Pause';
         if (pauseResumeText) pauseResumeText.textContent = label;
@@ -1050,18 +1007,9 @@
       function clearText() {
         hideMessage();
         stopSpeech();
-        activeSpokenSourceText = '';
-        if (textInput) {
-          textInput.value = '';
-          updateCounts();
-          textInput.focus();
-        }
-        if (spokenPreviewText) {
-          spokenPreviewText.innerHTML = '';
-        }
-        if (spokenPreviewWrapper) {
-          spokenPreviewWrapper.classList.add('hidden');
-        }
+        currentWordIndex = -1;
+        highlightWordAtIndex(-1);
+        setPlaybackState('idle');
       }
 
       /**
@@ -1085,29 +1033,10 @@
           return;
         }
 
-        const buttonsToMove = [stopBtn, translateBtn, copyBtn, clearBtn].filter(Boolean);
-
         if (isMobile) {
           mobileTopButtonsBar.classList.remove('hidden');
-          buttonsToMove.forEach((btn) => {
-            if (btn.parentElement !== mobileMovedButtonsSlot) {
-              mobileMovedButtonsSlot.appendChild(btn);
-            }
-          });
         } else {
           mobileTopButtonsBar.classList.add('hidden');
-          const primaryTarget = primaryActionGroup || desktopActionButtonsBar;
-          const secondaryTarget = secondaryActionGroup || desktopActionButtonsBar;
-          [stopBtn, translateBtn].filter(Boolean).forEach((btn) => {
-            if (btn.parentElement !== primaryTarget) {
-              primaryTarget.appendChild(btn);
-            }
-          });
-          [copyBtn, clearBtn].filter(Boolean).forEach((btn) => {
-            if (btn.parentElement !== secondaryTarget) {
-              secondaryTarget.appendChild(btn);
-            }
-          });
         }
       }
 
@@ -1135,39 +1064,6 @@
 
         if (matchedIndex !== -1) {
           voiceSelect.value = String(matchedIndex);
-        }
-      }
-
-      function copyTypedText() {
-        const val = textInput ? textInput.value || '' : '';
-        if (!val.trim()) {
-          showMessage('There is no text to copy yet.', 'warning');
-          return;
-        }
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(val).catch(() => {});
-          }
-          const helper = document.createElement('textarea');
-          helper.value = val;
-          helper.setAttribute('readonly', '');
-          helper.style.position = 'fixed';
-          helper.style.opacity = '0';
-          document.body.appendChild(helper);
-          helper.select();
-          document.execCommand('copy');
-          document.body.removeChild(helper);
-
-          if (copyBtnText) {
-            const prev = copyBtnText.textContent;
-            copyBtnText.textContent = 'Copied!';
-            setTimeout(() => {
-              copyBtnText.textContent = prev || 'Copy Text';
-            }, 1500);
-          }
-          showMessage('Text copied to clipboard.', 'success');
-        } catch (err) {
-          showMessage('Unable to copy text automatically in this browser.', 'warning');
         }
       }
 
@@ -1275,12 +1171,9 @@
 
         const targetLang = translateLangSelect ? translateLangSelect.value || 'zh-TW' : 'zh-TW';
         const prevBtnLabel = translateBtnText ? translateBtnText.textContent : 'Translate';
-        const prevTopBtnLabel = topTranslateBtnText ? topTranslateBtnText.textContent : 'Translate';
 
         if (translateBtn) translateBtn.disabled = true;
-        if (topTranslateBtn) topTranslateBtn.disabled = true;
         if (translateBtnText) translateBtnText.textContent = 'Translating...';
-        if (topTranslateBtnText) topTranslateBtnText.textContent = 'Translating...';
 
         try {
           const sourceLang = detectSourceLang(sourceText, targetLang);
@@ -1339,9 +1232,7 @@
           showMessage('Could not translate text right now. Please check your connection and try again.', 'warning');
         } finally {
           if (translateBtn) translateBtn.disabled = false;
-          if (topTranslateBtn) topTranslateBtn.disabled = false;
           if (translateBtnText) translateBtnText.textContent = prevBtnLabel || 'Translate';
-          if (topTranslateBtnText) topTranslateBtnText.textContent = prevTopBtnLabel || 'Translate';
         }
       }
 
@@ -1375,19 +1266,11 @@
           togglePauseResume();
         });
       }
-      if (topStopBtn) {
-        topStopBtn.addEventListener('click', stopSpeech);
-      }
-      if (topTranslateBtn) {
-        topTranslateBtn.addEventListener('click', translateTypedText);
-      }
       pauseResumeBtn.addEventListener('click', togglePauseResume);
       stopBtn.addEventListener('click', stopSpeech);
       if (translateBtn) {
         translateBtn.addEventListener('click', translateTypedText);
       }
-      copyBtn.addEventListener('click', copyTypedText);
-      clearBtn.addEventListener('click', clearText);
       closeMessageBtn.addEventListener('click', hideMessage);
 
       // Sync white button text whenever a button has a dark background color
