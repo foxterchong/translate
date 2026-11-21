@@ -129,6 +129,22 @@
     body.mobile-device-mode #desktopActionButtonsBar {
       display: none;
     }
+
+    /* Keep top quick actions bar clearly visible at the top area across viewports */
+    #mobileTopButtonsBar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      margin-bottom: 1rem;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border: 2px solid #ffffff;
+      border-radius: 1.5rem;
+      padding: 0.625rem;
+      box-shadow: 0 10px 22px -12px rgba(99, 102, 241, 0.28);
+    }
   </style>
 </head>
 <body class="relative overflow-x-hidden bg-gradient-to-br from-rose-100 via-amber-50 to-sky-100 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-fuchsia-600 selection:text-white">
@@ -156,13 +172,13 @@
 
   <!-- Main Application Container -->
   <main id="mainContent" class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-grow">
-    <!-- Mobile Top Buttons Slot (populated automatically when smartphone mode is active) -->
-    <div id="mobileTopButtonsBar" class="hidden flex-wrap items-center gap-2 w-full" aria-label="Mobile quick actions">
-      <div class="flex items-center gap-2 w-full">
+    <!-- Top Quick Actions Bar (Pronounce, Pause/Resume, Stop, Translate) -->
+    <div id="mobileTopButtonsBar" class="flex flex-wrap items-center gap-2 w-full" aria-label="Top quick actions">
+      <div class="flex flex-wrap items-center gap-2 w-full">
         <button
           type="button"
           id="mobileSpeakBtn"
-          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-600 hover:from-rose-600 hover:via-fuchsia-700 hover:to-indigo-700 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-fuchsia-500/25 transition cursor-pointer touch-manipulation"
+          class="flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-600 hover:from-rose-600 hover:via-fuchsia-700 hover:to-indigo-700 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-fuchsia-500/25 transition cursor-pointer touch-manipulation"
         >
           <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 5v14l11-7z" />
@@ -180,6 +196,29 @@
             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
           </svg>
           <span id="mobilePauseResumeText">Pause</span>
+        </button>
+
+        <button
+          type="button"
+          id="topStopBtn"
+          disabled
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 disabled:opacity-40 disabled:pointer-events-none text-rose-700 font-semibold text-sm border border-rose-200 transition cursor-pointer touch-manipulation"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6h12v12H6z" />
+          </svg>
+          <span>Stop</span>
+        </button>
+
+        <button
+          type="button"
+          id="topTranslateBtn"
+          class="inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold text-sm border border-fuchsia-700 shadow-2xs transition cursor-pointer touch-manipulation"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+          </svg>
+          <span id="topTranslateBtnText">Translate</span>
         </button>
       </div>
 
@@ -245,42 +284,6 @@
 
     <!-- Primary Card Container -->
     <section class="bg-gradient-to-b from-white via-white to-sky-50/50 border-2 border-white rounded-3xl p-4 sm:p-6 shadow-xl shadow-indigo-200/50 space-y-6">
-      <!-- Quick Sample Paragraphs -->
-      <div>
-        <div class="flex items-center gap-2 mb-2.5">
-          <svg class="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 7.1-1.01L12 2z" />
-          </svg>
-          <span class="block text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-rose-600 via-amber-600 to-sky-600 bg-clip-text text-transparent">Try a sample paragraph</span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <button type="button" data-sample="Hello! Welcome to 神奇開心翻譯機. Type any sentence or paragraph here and I will read it out loud clearly for you." class="sample-btn group flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-50 to-amber-50 hover:from-rose-100 hover:to-amber-100 active:scale-[0.99] border border-rose-200/80 text-left text-xs sm:text-sm font-medium text-slate-700 transition shadow-2xs cursor-pointer">
-            <span class="w-7 h-7 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </span>
-            <span>Friendly Greeting</span>
-          </button>
-          <button type="button" data-sample="The quick brown fox jumps over the lazy dog. Practicing pronunciation with varied punctuation, pauses, and pacing helps test speech clarity." class="sample-btn group flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 active:scale-[0.99] border border-emerald-200/80 text-left text-xs sm:text-sm font-medium text-slate-700 transition shadow-2xs cursor-pointer">
-            <span class="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </span>
-            <span>Pacing & Clarity Test</span>
-          </button>
-          <button type="button" data-sample="In a bustling city of light and glass, morning commuters hurried past aroma-filled bakeries while the first tram bell echoed down the avenue." class="sample-btn group flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 active:scale-[0.99] border border-sky-200/80 text-left text-xs sm:text-sm font-medium text-slate-700 transition shadow-2xs cursor-pointer">
-            <span class="w-7 h-7 rounded-xl bg-sky-500/15 text-sky-600 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </span>
-            <span>Short Story Paragraph</span>
-          </button>
-        </div>
-      </div>
-
       <!-- Text Input Area -->
       <div>
         <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -447,7 +450,7 @@
       <!-- Action Buttons Bar -->
       <div id="desktopActionButtonsBar" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-200/80">
         <!-- Primary Playback Actions -->
-        <div id="primaryActionGroup" class="flex flex-wrap items-center gap-2.5">
+        <div id="primaryActionGroup" class="hidden flex-wrap items-center gap-2.5">
           <button
             type="button"
             id="speakBtn"
@@ -554,6 +557,9 @@
       const mobileSpeakBtn = document.getElementById('mobileSpeakBtn');
       const mobilePauseResumeBtn = document.getElementById('mobilePauseResumeBtn');
       const mobilePauseResumeText = document.getElementById('mobilePauseResumeText');
+      const topStopBtn = document.getElementById('topStopBtn');
+      const topTranslateBtn = document.getElementById('topTranslateBtn');
+      const topTranslateBtnText = document.getElementById('topTranslateBtnText');
       const pauseResumeBtn = document.getElementById('pauseResumeBtn');
       const pauseResumeText = document.getElementById('pauseResumeText');
       const stopBtn = document.getElementById('stopBtn');
@@ -578,7 +584,6 @@
       const messageText = document.getElementById('messageText');
       const closeMessageBtn = document.getElementById('closeMessageBtn');
       const rainbowTitle = document.getElementById('rainbowTitle');
-      const sampleButtons = document.querySelectorAll('.sample-btn');
       const emotionButtons = document.querySelectorAll('.emotion-btn');
       const activeEmotionBadge = document.getElementById('activeEmotionBadge');
       const mobileTopButtonsBar = document.getElementById('mobileTopButtonsBar');
@@ -704,6 +709,7 @@
         if (pauseResumeBtn) pauseResumeBtn.disabled = !isActive;
         if (mobilePauseResumeBtn) mobilePauseResumeBtn.disabled = !isActive;
         if (stopBtn) stopBtn.disabled = !isActive;
+        if (topStopBtn) topStopBtn.disabled = !isActive;
 
         const label = isPaused ? 'Resume' : 'Pause';
         if (pauseResumeText) pauseResumeText.textContent = label;
@@ -718,6 +724,22 @@
           voices = [];
         }
 
+        // Keep only Google Traditional Chinese, Simplified Chinese, English UK, and English US voices
+        const isAllowedGoogleVoice = (voice) => {
+          const name = String(voice && voice.name ? voice.name : '').toLowerCase();
+          const lang = String(voice && voice.lang ? voice.lang : '').toLowerCase().replace('_', '-');
+          if (!name.includes('google')) return false;
+
+          const isTraditionalChinese = lang === 'zh-tw' || lang === 'zh-hk' || lang === 'zh-mo';
+          const isSimplifiedChinese = lang === 'zh-cn' || lang === 'zh-sg';
+          const isEnglishUK = lang === 'en-gb';
+          const isEnglishUS = lang === 'en-us';
+
+          return isTraditionalChinese || isSimplifiedChinese || isEnglishUK || isEnglishUS;
+        };
+
+        voices = voices.filter(isAllowedGoogleVoice);
+
         if (voiceCountLabel) {
           voiceCountLabel.textContent = `${voices.length} ${voices.length === 1 ? 'voice' : 'voices'} detected`;
         }
@@ -728,7 +750,7 @@
         if (!voices.length) {
           const opt = document.createElement('option');
           opt.value = '';
-          opt.textContent = 'Default System Voice';
+          opt.textContent = 'No matching Google voices available';
           voiceSelect.appendChild(opt);
           return;
         }
@@ -1094,11 +1116,20 @@
        */
       function selectVoiceForLanguage(targetLang) {
         if (!voiceSelect || !voices || !voices.length || !targetLang) return;
-        const normalizedTarget = String(targetLang).toLowerCase();
+        const normalizedTarget = String(targetLang).toLowerCase().replace('_', '-');
         const baseTarget = normalizedTarget.split('-')[0];
 
         const matchedIndex = voices.findIndex((v) => {
-          const vLang = String(v.lang || '').toLowerCase();
+          const vLang = String(v.lang || '').toLowerCase().replace('_', '-');
+          if (normalizedTarget === 'zh-tw' || normalizedTarget === 'zh-hk') {
+            return vLang === 'zh-tw' || vLang === 'zh-hk' || vLang === 'zh-mo';
+          }
+          if (normalizedTarget === 'zh-cn' || normalizedTarget === 'zh-sg') {
+            return vLang === 'zh-cn' || vLang === 'zh-sg';
+          }
+          if (normalizedTarget === 'en-gb' || normalizedTarget === 'en-us') {
+            return vLang === normalizedTarget;
+          }
           return vLang === normalizedTarget || vLang.startsWith(baseTarget);
         });
 
@@ -1192,19 +1223,6 @@
         });
       }
 
-      sampleButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const sample = btn.getAttribute('data-sample') || '';
-          stopSpeech();
-          hideMessage();
-          if (textInput) {
-            textInput.value = sample;
-            updateCounts();
-            textInput.focus();
-          }
-        });
-      });
-
       emotionButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
           const emotion = btn.getAttribute('data-emotion') || 'neutral';
@@ -1257,9 +1275,12 @@
 
         const targetLang = translateLangSelect ? translateLangSelect.value || 'zh-TW' : 'zh-TW';
         const prevBtnLabel = translateBtnText ? translateBtnText.textContent : 'Translate';
+        const prevTopBtnLabel = topTranslateBtnText ? topTranslateBtnText.textContent : 'Translate';
 
         if (translateBtn) translateBtn.disabled = true;
+        if (topTranslateBtn) topTranslateBtn.disabled = true;
         if (translateBtnText) translateBtnText.textContent = 'Translating...';
+        if (topTranslateBtnText) topTranslateBtnText.textContent = 'Translating...';
 
         try {
           const sourceLang = detectSourceLang(sourceText, targetLang);
@@ -1318,7 +1339,9 @@
           showMessage('Could not translate text right now. Please check your connection and try again.', 'warning');
         } finally {
           if (translateBtn) translateBtn.disabled = false;
+          if (topTranslateBtn) topTranslateBtn.disabled = false;
           if (translateBtnText) translateBtnText.textContent = prevBtnLabel || 'Translate';
+          if (topTranslateBtnText) topTranslateBtnText.textContent = prevTopBtnLabel || 'Translate';
         }
       }
 
@@ -1351,6 +1374,12 @@
           event.preventDefault();
           togglePauseResume();
         });
+      }
+      if (topStopBtn) {
+        topStopBtn.addEventListener('click', stopSpeech);
+      }
+      if (topTranslateBtn) {
+        topTranslateBtn.addEventListener('click', translateTypedText);
       }
       pauseResumeBtn.addEventListener('click', togglePauseResume);
       stopBtn.addEventListener('click', stopSpeech);
