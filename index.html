@@ -140,7 +140,18 @@
   <!-- Main Application Container -->
   <main id="mainContent" class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-grow">
     <!-- Mobile Top Buttons Slot (populated automatically when smartphone mode is active) -->
-    <div id="mobileTopButtonsBar" class="hidden flex-wrap items-center gap-2 w-full" aria-label="Mobile quick actions"></div>
+    <div id="mobileTopButtonsBar" class="hidden flex-wrap items-center gap-2 w-full" aria-label="Mobile quick actions">
+      <button
+        type="button"
+        id="mobileSpeakBtn"
+        class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-600 hover:from-rose-600 hover:via-fuchsia-700 hover:to-indigo-700 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-fuchsia-500/25 transition cursor-pointer"
+      >
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        <span>Pronounce</span>
+      </button>
+    </div>
 
     <!-- Top Header -->
     <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 bg-white/75 backdrop-blur-md border-2 border-white rounded-3xl p-4 sm:p-5 shadow-lg shadow-pink-200/40">
@@ -477,6 +488,7 @@
       const pitchValue = document.getElementById('pitchValue');
 
       const speakBtn = document.getElementById('speakBtn');
+      const mobileSpeakBtn = document.getElementById('mobileSpeakBtn');
       const pauseResumeBtn = document.getElementById('pauseResumeBtn');
       const pauseResumeText = document.getElementById('pauseResumeText');
       const stopBtn = document.getElementById('stopBtn');
@@ -1558,6 +1570,9 @@
       });
 
       speakBtn.addEventListener('click', pronounceText);
+      if (mobileSpeakBtn) {
+        mobileSpeakBtn.addEventListener('click', pronounceText);
+      }
       pauseResumeBtn.addEventListener('click', togglePauseResume);
       stopBtn.addEventListener('click', stopSpeech);
       copyBtn.addEventListener('click', copyTypedText);
@@ -1610,31 +1625,10 @@
         buttonObserver.observe(btn, { attributes: true, attributeFilter: ['class'] });
       });
 
-      sampleButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const sample = btn.getAttribute('data-sample') || '';
-          textInput.value = sample;
-          updateCounts();
-          hideMessage();
-          pronounceText();
-        });
-      });
-
-      emotionButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const emotionKey = btn.getAttribute('data-emotion') || 'neutral';
-          setActiveEmotion(emotionKey);
-          if (synth && (synth.speaking || synth.pending || isPausedByUser) && activeSpokenText) {
-            const currentIdx =
-              currentHighlightedIndex >= 0
-                ? currentHighlightedIndex
-                : pausedWordIndex >= 0
-                  ? pausedWordIndex
-                  : 0;
-            speakFromWordIndex(activeSpokenText, currentIdx, false);
-          }
-        });
-      });
+      if (mobileSpeakBtn) {
+        colorWordsInElement(mobileSpeakBtn, 0);
+        syncDarkButtonTextColor(mobileSpeakBtn);
+      }
 
       // Voices load asynchronously in many browsers (especially Chrome/Edge)
       if (synth) {
