@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Viewport meta tag ensures responsive behavior across mobile, tablet, and desktop screens -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>神奇開心翻譯機</title>
+  <!-- Load Tailwind CSS for modern styling and responsive layout utilities -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Load Inter font family for clean readability -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          keyframes: {
+            floatSlow: {
+              '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+              '50%': { transform: 'translateY(-10px) rotate(3deg)' },
+            },
+            wavePulse: {
+              '0%, 100%': { transform: 'scaleY(0.45)' },
+              '50%': { transform: 'scaleY(1.15)' },
+            },
+          },
+          animation: {
+            'float-slow': 'floatSlow 6s ease-in-out infinite',
+            'wave-1': 'wavePulse 0.9s ease-in-out infinite',
+            'wave-2': 'wavePulse 0.9s ease-in-out 0.15s infinite',
+            'wave-3': 'wavePulse 0.9s ease-in-out 0.3s infinite',
+            'wave-4': 'wavePulse 0.9s ease-in-out 0.45s infinite',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Ensure buttons with dark backgrounds or active dark states display crisp white text */
+    button[class*="bg-slate-8"],
+    button[class*="bg-slate-9"],
+    button[class*="bg-gray-8"],
+    button[class*="bg-gray-9"],
+    button[class*="bg-zinc-8"],
+    button[class*="bg-zinc-9"],
+    button[class*="bg-neutral-8"],
+    button[class*="bg-neutral-9"],
+    button[class*="bg-indigo-6"],
+    button[class*="bg-indigo-7"],
+    button[class*="bg-fuchsia-6"],
+    button[class*="bg-fuchsia-7"],
+    button[class*="bg-purple-6"],
+    button[class*="bg-purple-7"],
+    button[class*="bg-rose-6"],
+    button[class*="bg-rose-7"],
+    button[class*="from-rose-500"],
+    button[class*="to-indigo-600"],
+    button.dark-btn,
+    button.btn-dark {
+      color: #ffffff;
+    }
+
+    button[class*="bg-slate-8"] span,
+    button[class*="bg-slate-9"] span,
+    button[class*="bg-gray-8"] span,
+    button[class*="bg-gray-9"] span,
+    button[class*="bg-zinc-8"] span,
+    button[class*="bg-zinc-9"] span,
+    button[class*="bg-neutral-8"] span,
+    button[class*="bg-neutral-9"] span,
+    button[class*="bg-indigo-6"] span,
+    button[class*="bg-indigo-7"] span,
+    button[class*="bg-fuchsia-6"] span,
+    button[class*="bg-fuchsia-7"] span,
+    button[class*="bg-purple-6"] span,
+    button[class*="bg-purple-7"] span,
+    button[class*="bg-rose-6"] span,
+    button[class*="bg-rose-7"] span,
+    button[class*="from-rose-500"] span,
+    button[class*="to-indigo-600"] span,
+    button.dark-btn span,
+    button.btn-dark span {
+      color: #ffffff;
+    }
+
+    /* Smartphone mode layout: move all buttons to a sticky top bar */
+    body.mobile-device-mode #mainContent {
+      display: flex;
+      flex-direction: column;
+      padding-top: 0.75rem;
+    }
+
+    body.mobile-device-mode #mobileTopButtonsBar {
+      display: flex;
+      order: -1;
+      position: sticky;
+      top: 0.5rem;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      border: 2px solid #ffffff;
+      border-radius: 1.5rem;
+      padding: 0.625rem;
+      margin-bottom: 0.875rem;
+      box-shadow: 0 12px 24px -12px rgba(99, 102, 241, 0.35);
+    }
+
+    body.mobile-device-mode #desktopActionButtonsBar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="relative overflow-x-hidden bg-gradient-to-br from-rose-100 via-amber-50 to-sky-100 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-fuchsia-600 selection:text-white">
+  <!-- Decorative Background Graphics -->
+  <div aria-hidden="true" class="pointer-events-none fixed inset-0 overflow-hidden -z-10">
+    <!-- Rainbow Arc Graphic in Top-Right -->
+    <svg class="animate-float-slow absolute -top-10 -right-12 w-64 sm:w-80 h-64 sm:h-80 opacity-65" viewBox="0 0 240 240" fill="none">
+      <path d="M 35 195 A 95 95 0 0 1 205 195" stroke="#fb7185" stroke-width="14" stroke-linecap="round" />
+      <path d="M 52 195 A 78 78 0 0 1 188 195" stroke="#fbbf24" stroke-width="14" stroke-linecap="round" />
+      <path d="M 69 195 A 61 61 0 0 1 171 195" stroke="#34d399" stroke-width="14" stroke-linecap="round" />
+      <path d="M 86 195 A 44 44 0 0 1 154 195" stroke="#38bdf8" stroke-width="14" stroke-linecap="round" />
+      <path d="M 103 195 A 27 27 0 0 1 137 195" stroke="#a78bfa" stroke-width="14" stroke-linecap="round" />
+    </svg>
+
+    <!-- Sparkle & Starburst Cluster in Bottom-Left -->
+    <svg class="animate-float-slow absolute bottom-8 -left-8 w-52 sm:w-64 h-52 sm:h-64 opacity-70" style="animation-delay: 1.5s;" viewBox="0 0 200 200" fill="none">
+      <circle cx="55" cy="135" r="46" fill="#fde047" fill-opacity="0.35" />
+      <circle cx="125" cy="155" r="32" fill="#a5f3fc" fill-opacity="0.45" />
+      <path d="M68 52 L73 66 L87 71 L73 76 L68 90 L63 76 L49 71 L63 66 Z" fill="#f472b6" />
+      <path d="M142 88 L145 97 L154 100 L145 103 L142 112 L139 103 L130 100 L139 97 Z" fill="#6366f1" />
+      <circle cx="105" cy="48" r="7" fill="#34d399" />
+      <circle cx="164" cy="56" r="5" fill="#fb923c" />
+    </svg>
+  </div>
+
+  <!-- Main Application Container -->
+  <main id="mainContent" class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-grow">
+    <!-- Mobile Top Buttons Slot (populated automatically when smartphone mode is active) -->
+    <div id="mobileTopButtonsBar" class="hidden flex-wrap items-center gap-2 w-full" aria-label="Mobile quick actions"></div>
+
+    <!-- Top Header -->
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 bg-white/75 backdrop-blur-md border-2 border-white rounded-3xl p-4 sm:p-5 shadow-lg shadow-pink-200/40">
+      <div class="flex items-start sm:items-center gap-3.5">
+        <!-- Happy Magic Speaker Mascot Graphic -->
+        <div class="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-rose-500 via-amber-400 to-sky-500 p-0.5 shadow-md shadow-rose-300/50">
+          <div class="w-full h-full rounded-[14px] bg-white flex items-center justify-center relative overflow-hidden">
+            <svg class="w-10 h-10" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <circle cx="32" cy="33" r="19" fill="#fef08a" stroke="#f59e0b" stroke-width="2.5" />
+              <circle cx="25.5" cy="30" r="2.6" fill="#1e293b" />
+              <circle cx="38.5" cy="30" r="2.6" fill="#1e293b" />
+              <circle cx="20.5" cy="34.5" r="3" fill="#fda4af" fill-opacity="0.85" />
+              <circle cx="43.5" cy="34.5" r="3" fill="#fda4af" fill-opacity="0.85" />
+              <path d="M25.5 37.5 Q32 43.5 38.5 37.5" stroke="#e11d48" stroke-width="2.8" stroke-linecap="round" fill="none" />
+              <path d="M24 14 L26 9 L28 14 L33 16 L28 18 L26 23 L24 18 L19 16 Z" fill="#ec4899" />
+              <path d="M45 13 L46.5 17 L50.5 18.5 L46.5 20 L45 24 L43.5 20 L39.5 18.5 L43.5 17 Z" fill="#0ea5e9" />
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-pink-100 via-amber-100 to-sky-100 border border-pink-200/80 text-fuchsia-700 text-xs font-semibold mb-1.5 shadow-2xs">
+            <!-- Animated Soundwave Bars Graphic -->
+            <span class="inline-flex items-end gap-0.5 h-3.5" aria-hidden="true">
+              <span class="w-1 h-2 rounded-full bg-rose-500 animate-wave-1"></span>
+              <span class="w-1 h-3 rounded-full bg-amber-500 animate-wave-2"></span>
+              <span class="w-1 h-2.5 rounded-full bg-emerald-500 animate-wave-3"></span>
+              <span class="w-1 h-3.5 rounded-full bg-sky-500 animate-wave-4"></span>
+            </span>
+            <span>Magic Rainbow Speech Studio</span>
+          </div>
+          <h1 id="rainbowTitle" class="text-2xl sm:text-3xl font-bold tracking-tight">神奇開心翻譯機</h1>
+          <p class="text-sm text-slate-600 mt-1">Type or paste any text or paragraph below and listen to it pronounced in real time.</p>
+        </div>
+      </div>
+
+      <!-- Status Indicator Badge -->
+      <div id="statusBadge" class="self-start sm:self-center inline-flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-white to-sky-50 border-2 border-sky-200/80 shadow-sm text-xs font-semibold text-slate-700">
+        <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span id="statusText">Ready</span>
+      </div>
+    </header>
+
+    <!-- Non-intrusive Notification / Error Banner (replaces alert()) -->
+    <div id="messageBox" role="alert" class="hidden mb-5 p-4 rounded-2xl border text-sm transition-all duration-200 flex items-start justify-between gap-3 shadow-xs">
+      <div class="flex items-start gap-3">
+        <svg id="messageIcon" class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p id="messageText" class="leading-relaxed font-medium"></p>
+      </div>
+      <button type="button" id="closeMessageBtn" aria-label="Dismiss message" class="p-1 rounded-lg hover:bg-black/5 text-current opacity-75 hover:opacity-100 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Primary Card Container -->
+    <section class="bg-gradient-to-b from-white via-white to-sky-50/50 border-2 border-white rounded-3xl p-4 sm:p-6 shadow-xl shadow-indigo-200/50 space-y-6">
+      <!-- Quick Sample Paragraphs -->
+      <div>
+        <div class="flex items-center gap-2 mb-2.5">
+          <svg class="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 7.1-1.01L12 2z" />
+          </svg>
+          <span class="block text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-rose-600 via-amber-600 to-sky-600 bg-clip-text text-transparent">Try a sample paragraph</span>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <button type="button" data-sample="Hello! Welcome to 神奇開心翻譯機. Type any sentence or paragraph here and I will read it out loud clearly for you." class="sample-btn group flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-50 to-amber-50 hover:from-rose-100 hover:to-amber-100 active:scale-[0.99] border border-rose-200/80 text-left text-xs sm:text-sm font-medium text-slate-700 transition shadow-2xs cursor-pointer">
+            <span class="w-7 h-7 rounded-xl bg-rose-500/15 text-rose-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            <span>Friendly Greeting</span>
+          </button>
+          <button type="button" data-sample="The quick brown fox jumps over the lazy dog. Practicing pronunciation with varied punctuation, pauses, and pacing helps test speech clarity." class="sample-btn group flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 active:scale-[0.99] border border-emerald-200/80 text-left text-xs sm:text-sm font-medium text-slate-700 transition shadow-2xs cursor-pointer">
+            <span class="w-7 h-7 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </span>
+            <span>Pacing & Clarity Test</span>
+          </button>
+          <button type="button" data-sample="In a bustling city of light and glass, morning commuters hurried past aroma-filled bakeries while the first tram bell echoed down the avenue." class="sample-btn group flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-sky-50 to-indigo-50 hover:from-sky-100 hover:to-indigo-100 active:scale-[0.99] border border-sky-200/80 text-left text-xs sm:text-sm font-medium text-slate-700 transition shadow-2xs cursor-pointer">
+            <span class="w-7 h-7 rounded-xl bg-sky-500/15 text-sky-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </span>
+            <span>Short Story Paragraph</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Text Input Area -->
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <label for="textInput" class="text-sm font-semibold text-slate-800">Your Text or Paragraph</label>
+          <div class="flex items-center gap-2 text-xs font-semibold">
+            <span id="wordCount" class="px-2.5 py-1 rounded-full bg-amber-100/90 text-amber-800 border border-amber-200/70">0 words</span>
+            <span id="charCount" class="px-2.5 py-1 rounded-full bg-sky-100/90 text-sky-800 border border-sky-200/70">0 characters</span>
+          </div>
+        </div>
+
+        <textarea
+          id="textInput"
+          rows="7"
+          placeholder="Type or paste your text or paragraph here to pronounce it..."
+          class="w-full rounded-2xl bg-gradient-to-br from-white via-amber-50/20 to-sky-50/30 border-2 border-indigo-100 focus:bg-white focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-400/15 outline-none p-4 text-base leading-relaxed text-slate-900 placeholder-slate-400 resize-y min-h-[160px] transition"
+        ></textarea>
+
+        <!-- Live Spoken Progress Preview -->
+        <div id="spokenPreviewWrapper" class="hidden mt-3 p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-amber-50 to-sky-50 border-2 border-amber-200/90 shadow-xs">
+          <div class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-fuchsia-700 mb-1.5">
+            <svg class="w-4 h-4 text-rose-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            <span>Currently Pronouncing</span>
+          </div>
+          <p id="spokenPreviewText" class="text-sm text-indigo-950 break-words leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- Voice & Speech Controls Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 pt-1">
+        <!-- Voice Selector -->
+        <div class="md:col-span-1 bg-gradient-to-br from-sky-50/90 to-indigo-50/80 border border-sky-200/80 rounded-2xl p-3.5">
+          <label for="voiceSelect" class="block text-xs font-bold uppercase tracking-wider text-sky-700 mb-2">Voice</label>
+          <select
+            id="voiceSelect"
+            class="w-full rounded-xl bg-white border border-sky-200 focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-400/15 outline-none px-3.5 py-3 text-sm font-medium text-slate-800 transition"
+          >
+            <option value="">Loading available voices...</option>
+          </select>
+        </div>
+
+        <!-- Speed / Rate Control -->
+        <div class="bg-gradient-to-br from-amber-50/90 to-rose-50/80 border border-amber-200/80 rounded-2xl p-3.5">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <label for="rateRange" class="font-bold uppercase tracking-wider text-amber-700">Speed</label>
+            <span id="rateValue" class="font-mono font-bold px-2 py-0.5 rounded-md bg-white text-rose-600 border border-amber-200">1.00x</span>
+          </div>
+          <input
+            id="rateRange"
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.05"
+            value="1"
+            class="w-full accent-rose-500 cursor-pointer h-2 bg-amber-200/70 rounded-lg"
+          >
+          <div class="flex justify-between text-[11px] font-medium text-slate-500 mt-1.5">
+            <span>0.5x Slow</span>
+            <span>1.0x Normal</span>
+            <span>2.0x Fast</span>
+          </div>
+        </div>
+
+        <!-- Pitch Control -->
+        <div class="bg-gradient-to-br from-emerald-50/90 to-teal-50/80 border border-emerald-200/80 rounded-2xl p-3.5">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <label for="pitchRange" class="font-bold uppercase tracking-wider text-emerald-700">Pitch</label>
+            <span id="pitchValue" class="font-mono font-bold px-2 py-0.5 rounded-md bg-white text-emerald-600 border border-emerald-200">1.00</span>
+          </div>
+          <input
+            id="pitchRange"
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.05"
+            value="1"
+            class="w-full accent-emerald-500 cursor-pointer h-2 bg-emerald-200/70 rounded-lg"
+          >
+          <div class="flex justify-between text-[11px] font-medium text-slate-500 mt-1.5">
+            <span>Lower</span>
+            <span>Normal</span>
+            <span>Higher</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10 Emotional Tones Selector -->
+      <div class="bg-gradient-to-r from-fuchsia-50/90 via-rose-50/80 to-amber-50/90 border-2 border-fuchsia-200/80 rounded-2xl p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-fuchsia-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span class="text-xs font-bold uppercase tracking-wider text-fuchsia-800">10 Emotional Tones</span>
+          </div>
+          <span id="activeEmotionBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-white text-fuchsia-700 border border-fuchsia-200 shadow-2xs">
+            Neutral — Balanced natural delivery
+          </span>
+        </div>
+
+        <div id="emotionButtonsGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <button type="button" data-emotion="happy" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-amber-100 border border-amber-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>😄</span>
+            <span>Happy</span>
+          </button>
+          <button type="button" data-emotion="excited" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-rose-100 border border-rose-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🤩</span>
+            <span>Excited</span>
+          </button>
+          <button type="button" data-emotion="calm" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-sky-100 border border-sky-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>😌</span>
+            <span>Calm</span>
+          </button>
+          <button type="button" data-emotion="sad" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-indigo-100 border border-indigo-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>😢</span>
+            <span>Sad</span>
+          </button>
+          <button type="button" data-emotion="angry" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-red-100 border border-red-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>😠</span>
+            <span>Angry</span>
+          </button>
+          <button type="button" data-emotion="whisper" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-purple-100 border border-purple-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🤫</span>
+            <span>Whisper</span>
+          </button>
+          <button type="button" data-emotion="dramatic" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-fuchsia-100 border border-fuchsia-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🎭</span>
+            <span>Dramatic</span>
+          </button>
+          <button type="button" data-emotion="curious" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-teal-100 border border-teal-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🧐</span>
+            <span>Curious</span>
+          </button>
+          <button type="button" data-emotion="encouraging" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🙌</span>
+            <span>Encouraging</span>
+          </button>
+          <button type="button" data-emotion="serious" class="emotion-btn px-3 py-2 rounded-xl bg-white hover:bg-slate-200 border border-slate-300 text-xs font-semibold text-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>🧐</span>
+            <span>Serious</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons Bar -->
+      <div id="desktopActionButtonsBar" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-slate-200/80">
+        <!-- Primary Playback Actions -->
+        <div id="primaryActionGroup" class="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            id="speakBtn"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-fuchsia-600 to-indigo-600 hover:from-rose-600 hover:via-fuchsia-700 hover:to-indigo-700 active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-fuchsia-500/25 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <span>Pronounce</span>
+          </button>
+
+          <button
+            type="button"
+            id="pauseResumeBtn"
+            disabled
+            class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 disabled:opacity-40 disabled:pointer-events-none text-amber-900 font-semibold text-sm border border-amber-300 shadow-2xs transition cursor-pointer"
+          >
+            <svg id="pauseIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+            <span id="pauseResumeText">Pause</span>
+          </button>
+
+          <button
+            type="button"
+            id="stopBtn"
+            disabled
+            class="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 disabled:opacity-40 disabled:pointer-events-none text-rose-700 font-semibold text-sm border border-rose-200 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6h12v12H6z" />
+            </svg>
+            <span>Stop</span>
+          </button>
+        </div>
+
+        <!-- Secondary Utility Actions -->
+        <div class="flex items-center gap-2.5">
+          <button
+            type="button"
+            id="copyBtn"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-800 text-sm font-semibold border border-sky-200 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span id="copyBtnText">Copy Text</span>
+          </button>
+
+          <button
+            type="button"
+            id="clearBtn"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-sm font-semibold border border-purple-200 transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Clear</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Helpful Keyboard Shortcut Hint -->
+    <p class="text-xs text-slate-600 mt-4 text-center sm:text-left bg-white/65 backdrop-blur-xs border border-white rounded-2xl px-4 py-2.5 inline-block">
+      Tip: Press <kbd class="px-1.5 py-0.5 rounded bg-amber-100 border border-amber-300 text-amber-900 font-mono shadow-2xs">Ctrl</kbd> + <kbd class="px-1.5 py-0.5 rounded bg-sky-100 border border-sky-300 text-sky-900 font-mono shadow-2xs">Enter</kbd> (or <kbd class="px-1.5 py-0.5 rounded bg-pink-100 border border-pink-300 text-pink-900 font-mono shadow-2xs">Cmd</kbd> + <kbd class="px-1.5 py-0.5 rounded bg-emerald-100 border border-emerald-300 text-emerald-900 font-mono shadow-2xs">Enter</kbd>) inside the text box to pronounce immediately.
+    </p>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-4 text-xs text-slate-600 border-t border-white/80 bg-white/50 backdrop-blur-xs rounded-t-3xl flex flex-col sm:flex-row items-center justify-between gap-2">
+    <span>Uses your browser's built-in SpeechSynthesis API.</span>
+    <span id="voiceCountLabel" class="font-semibold text-fuchsia-700">0 voices detected</span>
+  </footer>
+
+  <script>
+    /**
+     * Text to Speech Studio Application Logic
+     * Manages text input metrics, voice enumeration, speech synthesis playback,
+     * pause/resume/stop controls, and non-blocking user notifications.
+     */
+    (function () {
+      // Cache DOM elements safely
+      const textInput = document.getElementById('textInput');
+      const voiceSelect = document.getElementById('voiceSelect');
+      const rateRange = document.getElementById('rateRange');
+      const pitchRange = document.getElementById('pitchRange');
+      const rateValue = document.getElementById('rateValue');
+      const pitchValue = document.getElementById('pitchValue');
+
+      const speakBtn = document.getElementById('speakBtn');
+      const pauseResumeBtn = document.getElementById('pauseResumeBtn');
+      const pauseResumeText = document.getElementById('pauseResumeText');
+      const stopBtn = document.getElementById('stopBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const copyBtnText = document.getElementById('copyBtnText');
+      const clearBtn = document.getElementById('clearBtn');
+
+      const wordCountEl = document.getElementById('wordCount');
+      const charCountEl = document.getElementById('charCount');
+      const voiceCountLabel = document.getElementById('voiceCountLabel');
+
+      const statusBadge = document.getElementById('statusBadge');
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      const spokenPreviewWrapper = document.getElementById('spokenPreviewWrapper');
+      const spokenPreviewText = document.getElementById('spokenPreviewText');
+
+      const messageBox = document.getElementById('messageBox');
+      const messageText = document.getElementById('messageText');
+      const closeMessageBtn = document.getElementById('closeMessageBtn');
+      const rainbowTitle = document.getElementById('rainbowTitle');
+      const sampleButtons = document.querySelectorAll('.sample-btn');
+      const emotionButtons = document.querySelectorAll('.emotion-btn');
+      const activeEmotionBadge = document.getElementById('activeEmotionBadge');
+      const mobileTopButtonsBar = document.getElementById('mobileTopButtonsBar');
+      const desktopActionButtonsBar = document.getElementById('desktopActionButtonsBar');
+      const primaryActionGroup = document.getElementById('primaryActionGroup');
+      const secondaryActionGroup = document.getElementById('secondaryActionGroup');
+
+      /**
+       * Detect whether the user is currently on a smartphone device or narrow mobile viewport.
+       * @returns {boolean}
+       */
+      function isSmartphoneDevice() {
+        try {
+          const ua = navigator.userAgent || '';
+          const isMobileUa = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+          const isSmallViewport = window.innerWidth <= 767;
+          const hasTouch = 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+          return Boolean(isMobileUa || (isSmallViewport && hasTouch) || window.innerWidth < 640);
+        } catch (err) {
+          return window.innerWidth < 640;
+        }
+      }
+
+      /**
+       * Swap between desktop and smartphone layouts and move all buttons to the top
+       * when smartphone mode is detected.
+       */
+      function applySmartphoneModeLayout() {
+        const mobileMode = isSmartphoneDevice();
+        document.body.classList.toggle('mobile-device-mode', mobileMode);
+
+        if (!mobileTopButtonsBar || !desktopActionButtonsBar || !primaryActionGroup || !secondaryActionGroup) {
+          return;
+        }
+
+        if (mobileMode) {
+          if (primaryActionGroup.parentElement !== mobileTopButtonsBar) {
+            mobileTopButtonsBar.appendChild(primaryActionGroup);
+          }
+          if (secondaryActionGroup.parentElement !== mobileTopButtonsBar) {
+            mobileTopButtonsBar.appendChild(secondaryActionGroup);
+          }
+          primaryActionGroup.classList.add('w-full');
+          secondaryActionGroup.classList.add('w-full');
+        } else {
+          if (primaryActionGroup.parentElement !== desktopActionButtonsBar) {
+            desktopActionButtonsBar.insertBefore(primaryActionGroup, secondaryActionGroup);
+          }
+          if (secondaryActionGroup.parentElement !== desktopActionButtonsBar) {
+            desktopActionButtonsBar.appendChild(secondaryActionGroup);
+          }
+          primaryActionGroup.classList.remove('w-full');
+          secondaryActionGroup.classList.remove('w-full');
+        }
+      }
+
+      // 10 Emotional Tone presets shaping rate, pitch, volume, and delivery character
+      const EMOTION_TONES = {
+        neutral: {
+          label: 'Neutral',
+          icon: '🙂',
+          desc: 'Balanced natural delivery',
+          rateMult: 1.0,
+          pitchAdd: 0.0,
+          volume: 1.0,
+          paceFactor: 1.0,
+        },
+        happy: {
+          label: 'Happy',
+          icon: '😄',
+          desc: 'Bright, upbeat & cheerful',
+          rateMult: 1.12,
+          pitchAdd: 0.24,
+          volume: 1.0,
+          paceFactor: 0.9,
+        },
+        excited: {
+          label: 'Excited',
+          icon: '🤩',
+          desc: 'Fast, energetic & lively',
+          rateMult: 1.28,
+          pitchAdd: 0.38,
+          volume: 1.0,
+          paceFactor: 0.78,
+        },
+        calm: {
+          label: 'Calm',
+          icon: '😌',
+          desc: 'Smooth, gentle & relaxed',
+          rateMult: 0.86,
+          pitchAdd: -0.06,
+          volume: 0.88,
+          paceFactor: 1.16,
+        },
+        sad: {
+          label: 'Sad',
+          icon: '😢',
+          desc: 'Slow, soft &melancholic',
+          rateMult: 0.74,
+          pitchAdd: -0.24,
+          volume: 0.78,
+          paceFactor: 1.32,
+        },
+        angry: {
+          label: 'Angry',
+          icon: '😠',
+          desc: 'Firm, intense & forceful',
+          rateMult: 1.18,
+          pitchAdd: -0.14,
+          volume: 1.0,
+          paceFactor: 0.86,
+        },
+        whisper: {
+          label: 'Whisper',
+          icon: '🤫',
+          desc: 'Quiet, hushed & delicate',
+          rateMult: 0.82,
+          pitchAdd: 0.14,
+          volume: 0.42,
+          paceFactor: 1.2,
+        },
+        dramatic: {
+          label: 'Dramatic',
+          icon: '🎭',
+          desc: 'Expressive, theatrical & bold',
+          rateMult: 0.92,
+          pitchAdd: 0.28,
+          volume: 1.0,
+          paceFactor: 1.1,
+        },
+        curious: {
+          label: 'Curious',
+          icon: '🧐',
+          desc: 'Inquisitive, bright & questioning',
+          rateMult: 1.05,
+          pitchAdd: 0.2,
+          volume: 0.95,
+          paceFactor: 0.96,
+        },
+        encouraging: {
+          label: 'Encouraging',
+          icon: '🙌',
+          desc: 'Warm, uplifting & supportive',
+          rateMult: 1.06,
+          pitchAdd: 0.16,
+          volume: 1.0,
+          paceFactor: 0.95,
+        },
+        serious: {
+          label: 'Serious',
+          icon: '🧐',
+          desc: 'Steady, measured & authoritative',
+          rateMult: 0.9,
+          pitchAdd: -0.16,
+          volume: 0.96,
+          paceFactor: 1.12,
+        },
+      };
+
+      let selectedEmotionKey = 'neutral';
+
+      /**
+       * Clamp synthesized speech parameters to safe Web Speech API ranges.
+       * @param {number} value
+       * @param {number} min
+       * @param {number} max
+       * @returns {number}
+       */
+      function clampSpeechParam(value, min, max) {
+        return Math.min(max, Math.max(min, Number(value.toFixed(2))));
+      }
+
+      /**
+       * Compute effective rate, pitch, and volume for the currently active emotion tone.
+       */
+      function getEffectiveSpeechSettings() {
+        const baseRate = parseFloat(rateRange.value);
+        const basePitch = parseFloat(pitchRange.value);
+        const safeRate = Number.isFinite(baseRate) ? baseRate : 1;
+        const safePitch = Number.isFinite(basePitch) ? basePitch : 1;
+        const tone = EMOTION_TONES[selectedEmotionKey] || EMOTION_TONES.neutral;
+
+        return {
+          tone,
+          rate: clampSpeechParam(safeRate * tone.rateMult, 0.5, 2.0),
+          pitch: clampSpeechParam(safePitch + tone.pitchAdd, 0.5, 2.0),
+          volume: clampSpeechParam(tone.volume, 0.1, 1.0),
+        };
+      }
+
+      /**
+       * Update visual selection state for the 10 emotion buttons and badge.
+       * @param {string} emotionKey
+       */
+      function setActiveEmotion(emotionKey) {
+        selectedEmotionKey = EMOTION_TONES[emotionKey] ? emotionKey : 'neutral';
+        const tone = EMOTION_TONES[selectedEmotionKey];
+
+        emotionButtons.forEach((btn) => {
+          const isMatch = btn.getAttribute('data-emotion') === selectedEmotionKey;
+          btn.classList.toggle('ring-2', isMatch);
+          btn.classList.toggle('ring-fuchsia-500', isMatch);
+          btn.classList.toggle('bg-gradient-to-r', isMatch);
+          btn.classList.toggle('from-rose-500', isMatch);
+          btn.classList.toggle('to-fuchsia-600', isMatch);
+          btn.classList.toggle('text-white', isMatch);
+          btn.classList.toggle('shadow-sm', isMatch);
+          btn.classList.toggle('bg-white', !isMatch);
+          btn.classList.toggle('text-slate-700', !isMatch);
+        });
+
+        if (activeEmotionBadge) {
+          activeEmotionBadge.textContent = `${tone.icon} ${tone.label} — ${tone.desc}`;
+          colorWordsInElement(activeEmotionBadge, 0);
+        }
+      }
+
+      // Bright rainbow palette applied word-by-word across the page
+      const RAINBOW_COLORS = [
+        'text-rose-600',
+        'text-amber-600',
+        'text-lime-600',
+        'text-emerald-600',
+        'text-sky-600',
+        'text-indigo-600',
+        'text-purple-600',
+      ];
+
+      /**
+       * Color each individual word inside an element with sequential rainbow colors
+       * while preserving spaces and line breaks.
+       * @param {HTMLElement|null} el
+       * @param {number} startIndex
+       * @returns {number} Next color index
+       */
+      function colorWordsInElement(el, startIndex = 0) {
+        if (!el) return startIndex;
+
+        let colorIdx = startIndex;
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        const textNodes = [];
+
+        let currentNode = walker.nextNode();
+        while (currentNode) {
+          if (currentNode.nodeValue && currentNode.nodeValue.trim().length > 0) {
+            textNodes.push(currentNode);
+          }
+          currentNode = walker.nextNode();
+        }
+
+        textNodes.forEach((node) => {
+          const fragment = document.createDocumentFragment();
+          // Split by whitespace while keeping separators intact
+          const tokens = node.nodeValue.split(/(\s+)/);
+
+          tokens.forEach((token) => {
+            if (!token) return;
+            if (/^\s+$/.test(token)) {
+              fragment.appendChild(document.createTextNode(token));
+            } else {
+              const span = document.createElement('span');
+              span.className = `${RAINBOW_COLORS[colorIdx % RAINBOW_COLORS.length]} font-semibold`;
+              span.textContent = token;
+              fragment.appendChild(span);
+              colorIdx += 1;
+            }
+          });
+
+          node.parentNode?.replaceChild(fragment, node);
+        });
+
+        return colorIdx;
+      }
+
+      /**
+       * Apply rainbow word coloring to the main title and visible page labels/buttons/paragraphs.
+       */
+      function applyRainbowWordsToPage() {
+        let idx = 0;
+        idx = colorWordsInElement(rainbowTitle, idx);
+
+        const targets = document.querySelectorAll(
+          'header p, section > div > span, section > div > div > span, label, button, footer span, #spokenPreviewText, #messageText'
+        );
+
+        targets.forEach((el) => {
+          // Skip inputs/selects/textareas and already-colored word spans
+          if (['INPUT', 'TEXTAREA', 'SELECT', 'OPTION'].includes(el.tagName)) return;
+          if (el.closest('[data-rainbow-applied="true"]')) return;
+          el.setAttribute('data-rainbow-applied', 'true');
+          idx = colorWordsInElement(el, idx);
+        });
+      }
+
+      // Check browser support for Web Speech Synthesis
+      const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+      let voices = [];
+      let isPausedByUser = false;
+      let activeSpokenText = '';
+      let wordSpans = [];
+      let wordTokenMeta = [];
+      let currentHighlightedIndex = -1;
+      let pausedWordIndex = -1;
+      let fallbackTimerId = null;
+      let fallbackWordIndex = 0;
+      let playbackSessionId = 0;
+      let hasReceivedNativeBoundary = false;
+      let utteranceStartTimestamp = 0;
+      let wordCumulativeStartMs = [];
+
+      /**
+       * Escape HTML special characters for safe rendering.
+       * @param {string} str
+       * @returns {string}
+       */
+      function escapeHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      /**
+       * Clear any active fallback word highlight timer safely.
+       */
+      function clearFallbackWordTimer() {
+        if (fallbackTimerId !== null) {
+          clearTimeout(fallbackTimerId);
+          fallbackTimerId = null;
+        }
+      }
+
+      /**
+       * Display a non-blocking banner message to the user.
+       * @param {string} text
+       * @param {'info'|'success'|'warning'|'error'} [type='info']
+       */
+      function showMessage(text, type = 'info') {
+        if (!messageBox || !messageText) return;
+
+        messageBox.classList.remove(
+          'hidden',
+          'bg-sky-50',
+          'border-sky-200',
+          'text-sky-800',
+          'bg-emerald-50',
+          'border-emerald-200',
+          'text-emerald-800',
+          'bg-amber-50',
+          'border-amber-200',
+          'text-amber-900',
+          'bg-rose-50',
+          'border-rose-200',
+          'text-rose-800'
+        );
+
+        const styles = {
+          info: ['bg-sky-50', 'border-sky-200', 'text-sky-800'],
+          success: ['bg-emerald-50', 'border-emerald-200', 'text-emerald-800'],
+          warning: ['bg-amber-50', 'border-amber-200', 'text-amber-900'],
+          error: ['bg-rose-50', 'border-rose-200', 'text-rose-800'],
+        };
+
+        const chosen = styles[type] || styles.info;
+        messageBox.classList.add(...chosen);
+        messageText.textContent = text;
+        colorWordsInElement(messageText, 0);
+      }
+
+      /**
+       * Tokenize text into spoken word/CJK units and render interactive word spans
+       * in the live spoken preview box.
+       * @param {string} text
+       */
+      function buildSpokenPreviewWords(text) {
+        wordSpans = [];
+        wordTokenMeta = [];
+        currentHighlightedIndex = -1;
+        fallbackWordIndex = 0;
+
+        if (!spokenPreviewText) return;
+
+        const tokenRegex = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]|[^\s\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]+/g;
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+        let tokenIdx = 0;
+
+        while ((match = tokenRegex.exec(text)) !== null) {
+          if (match.index > lastIndex) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+          }
+
+          const wordStr = match[0];
+          const span = document.createElement('span');
+          span.className = `${RAINBOW_COLORS[tokenIdx % RAINBOW_COLORS.length]} inline-block rounded px-1 py-0.5 transition-transform duration-75`;
+          span.textContent = wordStr;
+          fragment.appendChild(span);
+
+          wordSpans.push(span);
+          wordTokenMeta.push({
+            index: tokenIdx,
+            word: wordStr,
+            start: match.index,
+            end: match.index + wordStr.length,
+          });
+
+          tokenIdx += 1;
+          lastIndex = match.index + wordStr.length;
+        }
+
+        if (lastIndex < text.length) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+
+        spokenPreviewText.innerHTML = '';
+        spokenPreviewText.appendChild(fragment);
+      }
+
+      /**
+       * Estimate spoken duration in milliseconds for a single token based on
+       * character length, punctuation pauses, and current playback rate.
+       * @param {string} word
+       * @param {number} rate
+       * @returns {number}
+       */
+      function estimateTokenDurationMs(word, rate) {
+        const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+        const tone = EMOTION_TONES[selectedEmotionKey] || EMOTION_TONES.neutral;
+        const isCjk = /[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af]/.test(word);
+        const endsWithPausePunct = /[,.;:!?，。；：！？、]$/.test(word);
+        const baseMs = isCjk
+          ? 215
+          : Math.min(620, Math.max(185, word.length * 48 + 95));
+        const pauseExtraMs = endsWithPausePunct ? 110 : 0;
+        return Math.max(95, Math.round(((baseMs + pauseExtraMs) * tone.paceFactor) / safeRate));
+      }
+
+      /**
+       * Precompute cumulative start offsets (in ms) for tokens starting at `startIdx`
+       * so fallback/drift-correction stays anchored to actual elapsed speech time.
+       * @param {number} startIdx
+       * @param {number} rate
+       */
+      function rebuildTimelineFromIndex(startIdx, rate) {
+        wordCumulativeStartMs = new Array(wordTokenMeta.length).fill(0);
+        if (!wordTokenMeta.length) return;
+        const safeStart = Math.max(0, Math.min(startIdx, wordTokenMeta.length - 1));
+        let elapsed = 0;
+        for (let i = safeStart; i < wordTokenMeta.length; i += 1) {
+          wordCumulativeStartMs[i] = elapsed;
+          elapsed += estimateTokenDurationMs(wordTokenMeta[i].word, rate);
+        }
+      }
+
+      /**
+       * Immediately apply highlight classes to the word at `index` with zero frame lag.
+       * @param {number} index
+       */
+      function applyHighlightClassesImmediate(index) {
+        if (!wordSpans.length) return;
+        const clamped = Math.max(0, Math.min(index, wordSpans.length - 1));
+
+        if (currentHighlightedIndex !== clamped && currentHighlightedIndex >= 0 && wordSpans[currentHighlightedIndex]) {
+          wordSpans[currentHighlightedIndex].classList.remove(
+            'bg-amber-300',
+            'text-slate-950',
+            'ring-2',
+            'ring-amber-500',
+            'scale-105',
+            'font-bold',
+            'shadow-xs'
+          );
+        }
+
+        currentHighlightedIndex = clamped;
+        fallbackWordIndex = clamped;
+        const activeSpan = wordSpans[clamped];
+        if (activeSpan) {
+          activeSpan.classList.add(
+            'bg-amber-300',
+            'text-slate-950',
+            'ring-2',
+            'ring-amber-500',
+            'scale-105',
+            'font-bold',
+            'shadow-xs'
+          );
+          activeSpan.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+        }
+      }
+
+      /**
+       * Highlight the word at the specified index in the spoken preview.
+       * @param {number} index
+       */
+      function highlightWordAtIndex(index) {
+        applyHighlightClassesImmediate(index);
+      }
+
+      /**
+       * Find the word index matching a speech boundary character offset.
+       * @param {number} charIndex
+       * @param {number} [charLength=0]
+       * @returns {number}
+       */
+      function findWordIndexByCharIndex(charIndex, charLength = 0) {
+        if (!wordTokenMeta.length || typeof charIndex !== 'number' || charIndex < 0) {
+          return -1;
+        }
+        const boundaryEnd = charIndex + Math.max(0, charLength);
+        for (let i = 0; i < wordTokenMeta.length; i += 1) {
+          const meta = wordTokenMeta[i];
+          if (charIndex >= meta.start && charIndex < meta.end) {
+            return meta.index;
+          }
+          if (charIndex < meta.start && boundaryEnd > meta.start) {
+            return meta.index;
+          }
+          if (charIndex < meta.start) {
+            return Math.max(0, i - 1);
+          }
+        }
+        return wordTokenMeta.length - 1;
+      }
+
+      /**
+       * Schedule synchronized per-token fallback highlighting anchored to elapsed
+       * wall-clock time so highlights never drift behind or ahead of speech.
+       * @param {number} rate
+       * @param {number} sessionId
+       * @param {number} startIdx
+       */
+      function startFallbackWordHighlight(rate = 1, sessionId = playbackSessionId, startIdx = 0) {
+        clearFallbackWordTimer();
+        if (!wordSpans.length || hasReceivedNativeBoundary || isPausedByUser) return;
+
+        const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+        const anchorIdx = Math.max(0, Math.min(startIdx, wordSpans.length - 1));
+        rebuildTimelineFromIndex(anchorIdx, safeRate);
+        utteranceStartTimestamp = performance.now();
+        highlightWordAtIndex(anchorIdx);
+
+        const scheduleNextTick = () => {
+          if (sessionId !== playbackSessionId || isPausedByUser || hasReceivedNativeBoundary) {
+            clearFallbackWordTimer();
+            return;
+          }
+
+          const elapsedMs = performance.now() - utteranceStartTimestamp;
+          let targetIdx = anchorIdx;
+          for (let i = anchorIdx; i < wordSpans.length; i += 1) {
+            if (elapsedMs >= wordCumulativeStartMs[i]) {
+              targetIdx = i;
+            } else {
+              break;
+            }
+          }
+
+          if (targetIdx !== currentHighlightedIndex) {
+            highlightWordAtIndex(targetIdx);
+          }
+
+          const nextIdx = targetIdx + 1;
+          if (nextIdx < wordSpans.length) {
+            const waitMs = Math.max(25, Math.round(wordCumulativeStartMs[nextIdx] - elapsedMs));
+            fallbackTimerId = setTimeout(scheduleNextTick, waitMs);
+          } else {
+            clearFallbackWordTimer();
+          }
+        };
+
+        if (anchorIdx + 1 < wordSpans.length) {
+          const firstNextWait = Math.max(25, Math.round(wordCumulativeStartMs[anchorIdx + 1]));
+          fallbackTimerId = setTimeout(scheduleNextTick, firstNextWait);
+        }
+      }
+
+      /**
+       * Helper to build and launch a SpeechSynthesisUtterance starting at a specific word index,
+       * keeping word highlighting and speech boundary/fallback timing synchronized.
+       * @param {string} fullText
+       * @param {number} startWordIdx
+       * @param {boolean} rebuildPreview
+       */
+      function speakFromWordIndex(fullText, startWordIdx = 0, rebuildPreview = false) {
+        if (!synth || !fullText) return false;
+
+        if (synth.speaking || synth.pending || synth.paused) {
+          synth.cancel();
+        }
+
+        playbackSessionId += 1;
+        const currentSession = playbackSessionId;
+        hasReceivedNativeBoundary = false;
+        isPausedByUser = false;
+        pausedWordIndex = -1;
+        activeSpokenText = fullText;
+
+        if (rebuildPreview || wordTokenMeta.length === 0) {
+          buildSpokenPreviewWords(fullText);
+        }
+
+        const clampedStartIdx =
+          wordTokenMeta.length > 0
+            ? Math.max(0, Math.min(startWordIdx, wordTokenMeta.length - 1))
+            : 0;
+        const startMeta = wordTokenMeta[clampedStartIdx];
+        const baseOffset = startMeta ? startMeta.start : 0;
+        const spokenSlice = startMeta ? fullText.slice(baseOffset).trimStart() : fullText;
+        const trimmedLeadingOffset =
+          startMeta && fullText.length >= baseOffset
+            ? baseOffset + (fullText.slice(baseOffset).length - spokenSlice.length)
+            : 0;
+
+        if (!spokenSlice) {
+          setPlaybackState('idle');
+          return false;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(spokenSlice);
+        const selectedVoiceIdx = Number(voiceSelect.value);
+        if (!Number.isNaN(selectedVoiceIdx) && voices[selectedVoiceIdx]) {
+          utterance.voice = voices[selectedVoiceIdx];
+          utterance.lang = voices[selectedVoiceIdx].lang;
+        }
+
+        const speechSettings = getEffectiveSpeechSettings();
+        utterance.rate = speechSettings.rate;
+        utterance.pitch = speechSettings.pitch;
+        utterance.volume = speechSettings.volume;
+
+        let fallbackStartedForUtterance = false;
+
+        const beginFallbackIfNeeded = (fromIdx = clampedStartIdx) => {
+          if (
+            fallbackStartedForUtterance ||
+            hasReceivedNativeBoundary ||
+            currentSession !== playbackSessionId ||
+            isPausedByUser
+          ) {
+            return;
+          }
+          fallbackStartedForUtterance = true;
+          startFallbackWordHighlight(utterance.rate, currentSession, fromIdx);
+        };
+
+        utterance.onstart = () => {
+          if (currentSession !== playbackSessionId || isPausedByUser) return;
+          setPlaybackState('speaking');
+          utteranceStartTimestamp = performance.now();
+          if (wordSpans.length > 0) {
+            highlightWordAtIndex(clampedStartIdx);
+          }
+          if (!hasReceivedNativeBoundary) {
+            fallbackStartedForUtterance = false;
+            beginFallbackIfNeeded(clampedStartIdx);
+          }
+        };
+
+        utterance.onpause = () => {
+          if (currentSession !== playbackSessionId) return;
+          clearFallbackWordTimer();
+          if (currentHighlightedIndex >= 0 && pausedWordIndex < 0) {
+            pausedWordIndex = currentHighlightedIndex;
+          }
+          isPausedByUser = true;
+          setPlaybackState('paused');
+        };
+
+        utterance.onresume = () => {
+          if (currentSession !== playbackSessionId || isPausedByUser) return;
+          setPlaybackState('speaking');
+          if (!hasReceivedNativeBoundary) {
+            fallbackStartedForUtterance = false;
+            const resumeIdx = currentHighlightedIndex >= 0 ? currentHighlightedIndex : clampedStartIdx;
+            beginFallbackIfNeeded(resumeIdx);
+          }
+        };
+
+        utterance.onboundary = (event) => {
+          if (currentSession !== playbackSessionId || isPausedByUser) return;
+          if (!event || (event.name && event.name !== 'word' && event.name !== 'sentence')) {
+            return;
+          }
+          hasReceivedNativeBoundary = true;
+          clearFallbackWordTimer();
+
+          if (typeof event.charIndex === 'number' && event.charIndex >= 0) {
+            const charLen = typeof event.charLength === 'number' ? event.charLength : 0;
+            const absoluteCharIdx = trimmedLeadingOffset + event.charIndex;
+            const matchedIdx = findWordIndexByCharIndex(absoluteCharIdx, charLen);
+            if (matchedIdx !== -1) {
+              highlightWordAtIndex(matchedIdx);
+            }
+          }
+        };
+
+        utterance.onend = () => {
+          if (currentSession !== playbackSessionId || isPausedByUser) return;
+          clearFallbackWordTimer();
+          if (wordSpans.length > 0) {
+            highlightWordAtIndex(wordSpans.length - 1);
+          }
+          setPlaybackState('idle');
+        };
+
+        utterance.onerror = (event) => {
+          if (currentSession !== playbackSessionId) return;
+          if (isPausedByUser && (!event || event.error === 'interrupted' || event.error === 'canceled')) {
+            return;
+          }
+          clearFallbackWordTimer();
+          if (event && (event.error === 'interrupted' || event.error === 'canceled')) {
+            return;
+          }
+          setPlaybackState('idle');
+          if (event && event.error === 'not-allowed') {
+            showMessage(
+              'Speech playback was blocked by browser permissions. Try interacting with the page and clicking Pronounce again.',
+              'warning'
+            );
+            return;
+          }
+          showMessage(
+            'An issue occurred while pronouncing the text. Try another voice or shorter paragraph.',
+            'error'
+          );
+        };
+
+        setPlaybackState('speaking');
+        if (wordSpans.length > 0) {
+          highlightWordAtIndex(clampedStartIdx);
+        }
+        synth.speak(utterance);
+        beginFallbackIfNeeded(clampedStartIdx);
+        return true;
+      }
+
+      function hideMessage() {
+        if (messageBox) {
+          messageBox.classList.add('hidden');
+        }
+      }
+
+      /**
+       * Update playback state indicator and button enabled/disabled states.
+       * @param {'idle'|'speaking'|'paused'} state
+       */
+      function setPlaybackState(state) {
+        statusDot.classList.remove('bg-emerald-500', 'bg-indigo-500', 'bg-amber-500', 'animate-pulse');
+
+        if (state === 'speaking') {
+          isPausedByUser = false;
+          statusDot.classList.add('bg-indigo-500', 'animate-pulse');
+          statusText.textContent = 'Pronouncing...';
+          pauseResumeBtn.disabled = false;
+          stopBtn.disabled = false;
+          pauseResumeText.textContent = 'Pause';
+          spokenPreviewWrapper.classList.remove('hidden');
+        } else if (state === 'paused') {
+          isPausedByUser = true;
+          statusDot.classList.add('bg-amber-500');
+          statusText.textContent = 'Paused';
+          pauseResumeBtn.disabled = false;
+          stopBtn.disabled = false;
+          pauseResumeText.textContent = 'Resume';
+          spokenPreviewWrapper.classList.remove('hidden');
+        } else {
+          isPausedByUser = false;
+          clearFallbackWordTimer();
+          currentHighlightedIndex = -1;
+          fallbackWordIndex = 0;
+          statusDot.classList.add('bg-emerald-500');
+          statusText.textContent = 'Ready';
+          pauseResumeBtn.disabled = true;
+          stopBtn.disabled = true;
+          pauseResumeText.textContent = 'Pause';
+          spokenPreviewWrapper.classList.add('hidden');
+          spokenPreviewText.innerHTML = '';
+        }
+      }
+
+      /**
+       * Update live word and character counters for the text area.
+       */
+      function updateCounts() {
+        const text = textInput.value || '';
+        const chars = text.length;
+        const trimmed = text.trim();
+        const words = trimmed ? trimmed.split(/\s+/).length : 0;
+
+        charCountEl.textContent = `${chars.toLocaleString()} ${chars === 1 ? 'character' : 'characters'}`;
+        wordCountEl.textContent = `${words.toLocaleString()} ${words === 1 ? 'word' : 'words'}`;
+      }
+
+      /**
+       * Populate available system/browser speech voices into the select dropdown.
+       */
+      function populateVoices() {
+        if (!synth) {
+          voiceSelect.innerHTML = '<option value="">Speech synthesis not supported</option>';
+          voiceCountLabel.textContent = 'Unsupported browser';
+          return;
+        }
+
+        try {
+          const previouslySelected = voiceSelect.value;
+          voices = synth.getVoices() || [];
+
+          voiceCountLabel.textContent = `${voices.length} ${voices.length === 1 ? 'voice' : 'voices'} detected`;
+
+          if (voices.length === 0) {
+            voiceSelect.innerHTML = '<option value="">Default System Voice</option>';
+            return;
+          }
+
+          // Sort voices with default voices first, then alphabetically by name
+          const sortedVoices = [...voices].sort((a, b) => {
+            if (a.default && !b.default) return -1;
+            if (!a.default && b.default) return 1;
+            return a.name.localeCompare(b.name);
+          });
+
+          voiceSelect.innerHTML = '';
+          sortedVoices.forEach((voice) => {
+            const index = voices.indexOf(voice);
+            const option = document.createElement('option');
+            option.value = String(index);
+            const defaultTag = voice.default ? ' — Default' : '';
+            option.textContent = `${voice.name} (${voice.lang})${defaultTag}`;
+            voiceSelect.appendChild(option);
+          });
+
+          if (previouslySelected && voices[Number(previouslySelected)]) {
+            voiceSelect.value = previouslySelected;
+          } else {
+            const defaultIdx = voices.findIndex((v) => v.default);
+            if (defaultIdx !== -1) {
+              voiceSelect.value = String(defaultIdx);
+            }
+          }
+        } catch (err) {
+          showMessage('Could not load speech voices cleanly. Using default voice if available.', 'warning');
+        }
+      }
+
+      /**
+       * Speak the current text from the textarea.
+       */
+      function pronounceText() {
+        hideMessage();
+
+        if (!synth) {
+          showMessage('Sorry, your browser does not support the Web Speech API for pronouncing text.', 'error');
+          return;
+        }
+
+        const content = (textInput.value || '').trim();
+        if (!content) {
+          showMessage('Please type or paste some text or a paragraph before clicking Pronounce.', 'warning');
+          textInput.focus();
+          return;
+        }
+
+        // If currently paused on the same text, resume from the previous word instead of starting over
+        if (isPausedByUser && activeSpokenText === content && wordTokenMeta.length > 0) {
+          resumeFromCurrentWord(true);
+          return;
+        }
+
+        try {
+          speakFromWordIndex(content, 0, true);
+        } catch (err) {
+          clearFallbackWordTimer();
+          setPlaybackState('idle');
+          showMessage('Unable to start pronunciation due to an unexpected error.', 'error');
+        }
+      }
+
+      /**
+       * Resume pronunciation from the previous word before pausing.
+       * @param {boolean} [_fromCurrentWord=false]
+       */
+      function resumeFromCurrentWord(_fromCurrentWord = false) {
+        if (!synth) return;
+
+        const targetText = (activeSpokenText || textInput.value || '').trim();
+        if (!targetText) {
+          setPlaybackState('idle');
+          return;
+        }
+
+        const baseIdx =
+          pausedWordIndex >= 0
+            ? pausedWordIndex
+            : currentHighlightedIndex >= 0
+              ? currentHighlightedIndex
+              : fallbackWordIndex;
+        // Step back one word so playback starts on the previous word
+        const startIdx = Math.max(0, baseIdx - 1);
+
+        try {
+          if (synth.paused && wordTokenMeta.length === 0) {
+            isPausedByUser = false;
+            pausedWordIndex = -1;
+            synth.resume();
+            setPlaybackState('speaking');
+            return;
+          }
+
+          const started = speakFromWordIndex(targetText, startIdx, wordTokenMeta.length === 0);
+          if (!started) {
+            setPlaybackState('idle');
+          }
+        } catch (err) {
+          setPlaybackState('idle');
+          showMessage('Could not resume pronunciation cleanly.', 'warning');
+        }
+      }
+
+      /**
+       * Toggle pause and resume on active speech synthesis at any time.
+       */
+      function togglePauseResume() {
+        if (!synth) return;
+
+        try {
+          const isCurrentlyActive =
+            !isPausedByUser &&
+            (synth.speaking ||
+              synth.pending ||
+              fallbackTimerId !== null ||
+              currentHighlightedIndex >= 0);
+
+          if (isCurrentlyActive) {
+            const activeWordBeforePause =
+              currentHighlightedIndex >= 0
+                ? currentHighlightedIndex
+                : fallbackWordIndex >= 0
+                  ? fallbackWordIndex
+                  : 0;
+            pausedWordIndex = activeWordBeforePause;
+            isPausedByUser = true;
+            // Bump session ID before stopping so stale utterance events cannot overwrite paused state
+            playbackSessionId += 1;
+            clearFallbackWordTimer();
+
+            try {
+              synth.pause();
+            } catch (pauseErr) {
+              // Ignore browsers that throw on pause()
+            }
+
+            // Always cancel queued/active speech immediately so pause reliably stops audio
+            // across Chrome, Edge, Safari, and speech voices that ignore synth.pause()
+            try {
+              synth.cancel();
+            } catch (cancelErr) {
+              // Ignore cancel failure
+            }
+
+            setPlaybackState('paused');
+            if (wordSpans.length > 0) {
+              const previousWordIdx = Math.max(0, activeWordBeforePause - 1);
+              highlightWordAtIndex(previousWordIdx);
+            }
+          } else if (isPausedByUser || synth.paused) {
+            resumeFromCurrentWord(true);
+          }
+        } catch (err) {
+          showMessage('Pause/Resume is not supported for this voice in your browser.', 'warning');
+        }
+      }
+
+      /**
+       * Stop speech synthesis immediately.
+       */
+      function stopSpeech() {
+        if (!synth) return;
+        isPausedByUser = false;
+        pausedWordIndex = -1;
+        playbackSessionId += 1;
+        hasReceivedNativeBoundary = false;
+        clearFallbackWordTimer();
+        try {
+          synth.cancel();
+        } catch (err) {
+          // Ignore cancel errors on cleanup
+        } finally {
+          setPlaybackState('idle');
+        }
+      }
+
+      /**
+       * Copy typed text to clipboard using execCommand fallback safe in iframes.
+       */
+      function copyTypedText() {
+        const text = textInput.value || '';
+        if (!text.trim()) {
+          showMessage('There is no text to copy yet.', 'warning');
+          return;
+        }
+
+        try {
+          textInput.select();
+          textInput.setSelectionRange(0, text.length);
+          const successful = document.execCommand('copy');
+          window.getSelection()?.removeAllRanges();
+
+          if (successful) {
+            copyBtnText.textContent = 'Copied!';
+            showMessage('Text copied to clipboard.', 'success');
+            setTimeout(() => {
+              copyBtnText.textContent = 'Copy Text';
+            }, 1800);
+          } else {
+            showMessage('Could not automatically copy text. You can select it and press Ctrl+C / Cmd+C.', 'warning');
+          }
+        } catch (err) {
+          showMessage('Copy failed in this environment. Please copy manually.', 'warning');
+        }
+      }
+
+      /**
+       * Clear text input and stop any active pronunciation.
+       */
+      function clearText() {
+        stopSpeech();
+        hideMessage();
+        textInput.value = '';
+        updateCounts();
+        textInput.focus();
+      }
+
+      // Event Listeners
+      textInput.addEventListener('input', updateCounts);
+
+      textInput.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+          event.preventDefault();
+          pronounceText();
+        }
+      });
+
+      rateRange.addEventListener('input', () => {
+        const val = parseFloat(rateRange.value).toFixed(2);
+        rateValue.textContent = `${val}x`;
+      });
+
+      pitchRange.addEventListener('input', () => {
+        const val = parseFloat(pitchRange.value).toFixed(2);
+        pitchValue.textContent = val;
+      });
+
+      speakBtn.addEventListener('click', pronounceText);
+      pauseResumeBtn.addEventListener('click', togglePauseResume);
+      stopBtn.addEventListener('click', stopSpeech);
+      copyBtn.addEventListener('click', copyTypedText);
+      clearBtn.addEventListener('click', clearText);
+      closeMessageBtn.addEventListener('click', hideMessage);
+
+      // Sync white button text whenever a button has a dark background color
+      const DARK_BG_CLASS_PATTERN = /^(?:bg|from|via|to)-(?:slate|gray|zinc|neutral)-(?:700|800|900|950)$|^(?:bg|from|via|to)-(?:indigo|fuchsia|purple|violet|rose|red|emerald|teal|sky|blue)-(?:600|700|800|900)$/;
+
+      function syncDarkButtonTextColor(btn) {
+        if (!btn || btn.tagName !== 'BUTTON') return;
+        const hasDarkClass = Array.from(btn.classList).some((cls) => DARK_BG_CLASS_PATTERN.test(cls));
+        let isDarkComputed = false;
+
+        try {
+          const bg = window.getComputedStyle(btn).backgroundColor;
+          const match = bg && bg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/i);
+          if (match) {
+            const r = Number(match[1]);
+            const g = Number(match[2]);
+            const b = Number(match[3]);
+            const alpha = match[4] !== undefined ? Number(match[4]) : 1;
+            const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            if (alpha > 0.25 && luminance < 115) {
+              isDarkComputed = true;
+            }
+          }
+        } catch (err) {
+          // Fallback to class check if computed style is unavailable
+        }
+
+        const shouldBeWhite = hasDarkClass || isDarkComputed;
+        btn.classList.toggle('btn-dark', shouldBeWhite);
+        btn.style.color = shouldBeWhite ? '#ffffff' : '';
+        btn.querySelectorAll('span').forEach((span) => {
+          span.style.color = shouldBeWhite ? '#ffffff' : '';
+        });
+      }
+
+      const buttonObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            syncDarkButtonTextColor(mutation.target);
+          }
+        });
+      });
+
+      document.querySelectorAll('button').forEach((btn) => {
+        syncDarkButtonTextColor(btn);
+        buttonObserver.observe(btn, { attributes: true, attributeFilter: ['class'] });
+      });
+
+      sampleButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const sample = btn.getAttribute('data-sample') || '';
+          textInput.value = sample;
+          updateCounts();
+          hideMessage();
+          pronounceText();
+        });
+      });
+
+      emotionButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const emotionKey = btn.getAttribute('data-emotion') || 'neutral';
+          setActiveEmotion(emotionKey);
+          if (synth && (synth.speaking || synth.pending || isPausedByUser) && activeSpokenText) {
+            const currentIdx =
+              currentHighlightedIndex >= 0
+                ? currentHighlightedIndex
+                : pausedWordIndex >= 0
+                  ? pausedWordIndex
+                  : 0;
+            speakFromWordIndex(activeSpokenText, currentIdx, false);
+          }
+        });
+      });
+
+      // Voices load asynchronously in many browsers (especially Chrome/Edge)
+      if (synth) {
+        populateVoices();
+        if (typeof synth.onvoiceschanged !== 'undefined') {
+          synth.onvoiceschanged = populateVoices;
+        }
+      } else {
+        showMessage('Your current browser does not support speech synthesis.', 'error');
+      }
+
+      // Clean up speech when navigating away or hiding tab
+      window.addEventListener('beforeunload', () => {
+        if (synth) {
+          try {
+            synth.cancel();
+          } catch (err) {
+            // Ignore cleanup error
+          }
+        }
+      });
+
+      // Initialize counts and default state
+      updateCounts();
+      setActiveEmotion('neutral');
+      setPlaybackState('idle');
+      applySmartphoneModeLayout();
+      window.addEventListener('resize', applySmartphoneModeLayout);
+      applyRainbowWordsToPage();
+    })();
+  </script>
+</body>
+</html>
